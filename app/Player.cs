@@ -54,7 +54,8 @@ public class Player : KinematicBody2D
 
 		motion.y += GRAVITY * delta * TARGET_FPS;
 
-		if (IsTouchingGround(this.raycasts) || IsOnFloor()) {
+		if (IsTouchingGround(this.raycasts) || IsOnFloor()) 
+		{
 			if (xInput == 0) 
 			{
 				motion.x = Mathf.Lerp(motion.x, 0, FRICTION * delta);
@@ -67,7 +68,14 @@ public class Player : KinematicBody2D
 		}
 		else 
 		{
-			this.animationPlayer.Play("Jump");
+			if (IsPlayerMovingUp(motion))
+			{
+				this.animationPlayer.Play("Jump");
+			}
+			else 
+			{
+				this.animationPlayer.Play("Fall");
+			}
 
 			if (Input.IsActionJustReleased("ui_up") && motion.y < -JUMP_FORCE/2) 
 			{
@@ -83,7 +91,8 @@ public class Player : KinematicBody2D
 		motion = MoveAndSlide(motion, Vector2.Up);
 	}
 
-	private bool IsTouchingGround(List<RayCast2D> raycasts) {
+	private bool IsTouchingGround(List<RayCast2D> raycasts) 
+	{
 		bool raycastCollisions = false;
 		foreach (RayCast2D raycast in raycasts) 
 		{
@@ -91,5 +100,14 @@ public class Player : KinematicBody2D
 		}
 
 		return raycastCollisions;
+	}
+
+	private bool IsPlayerMovingUp(Vector2 trajectory) 
+	{
+		if (trajectory.y < 0) {
+			return true;
+		}
+
+		return false;
 	}
 }
