@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 public class Player : KinematicBody2D
 {
+	[Signal]
+	public delegate void Collided();
+
+	[Signal]
+	public delegate void Damage();
+
 	[Export]
 	private float ACCELERATION = 8;
 	[Export]
@@ -34,6 +40,8 @@ public class Player : KinematicBody2D
 
 	public override void _PhysicsProcess(float delta)
 	{
+		CheckCollisions();
+
 		float TARGET_FPS = Engine.GetFramesPerSecond();
 
 		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
@@ -88,7 +96,7 @@ public class Player : KinematicBody2D
 			}
 		}
 
-		motion = MoveAndSlide(motion, Vector2.Up);
+		motion = MoveAndSlide(motion, Vector2.Up);		
 	}
 
 	private bool IsTouchingGround(List<RayCast2D> raycasts) 
@@ -109,5 +117,47 @@ public class Player : KinematicBody2D
 		}
 
 		return false;
+	}
+
+	private void CheckCollisions() 
+	{
+		for (int i = 0; i < GetSlideCount(); i++)
+		{
+			var collision = GetSlideCollision(i);
+			if (collision != null)
+			{
+				// GD.Print(collision.Collider);
+				EmitSignal("Collided", collision, this);
+			}
+		}
+	}
+
+	private void OnPlayerDamage(int damage) 
+	{
+		if (damage > 0)
+		{
+			GD.Print("Damage");
+			Kill();
+		}
+	}
+
+	private void Kill() 
+	{
+		this.SetPhysicsProcess(false);
+		// this.animationPlayer.Stop();
+		this.animationPlayer.Play("Hurt");
+		Hide();
+		QueueFree();
+		GD.Print("Died");
+	}
+
+	public void OnAnimationPlayerAnimationFinished(string animationName) 
+	{
+		//GD.Print(animationName);
+		if (animationName == "Death") 
+		{
+			Hide();
+			QueueFree();
+		}
 	}
 }
