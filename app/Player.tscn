@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 3, 15 )
 
-[sub_resource type="Animation" id=6]
+[sub_resource type="Animation" id=2]
 resource_name = "Death"
 length = 0.8
 step = 0.0333333
@@ -23,7 +23,7 @@ tracks/0/keys = {
 "values": [ 7, 8, 9, 10, 11, 12, 11 ]
 }
 
-[sub_resource type="Animation" id=5]
+[sub_resource type="Animation" id=3]
 resource_name = "Fall"
 length = 0.0166667
 step = 0.0166667
@@ -40,7 +40,7 @@ tracks/0/keys = {
 "values": [ 6 ]
 }
 
-[sub_resource type="Animation" id=7]
+[sub_resource type="Animation" id=4]
 resource_name = "Hurt"
 length = 0.133333
 loop = true
@@ -58,8 +58,7 @@ tracks/0/keys = {
 "values": [ 7, 8 ]
 }
 
-[sub_resource type="Animation" id=4]
-resource_name = "Jump"
+[sub_resource type="Animation" id=5]
 length = 0.0166667
 step = 0.0166667
 tracks/0/type = "value"
@@ -75,8 +74,7 @@ tracks/0/keys = {
 "values": [ 5 ]
 }
 
-[sub_resource type="Animation" id=2]
-resource_name = "Run"
+[sub_resource type="Animation" id=6]
 loop = true
 step = 0.125
 tracks/0/type = "value"
@@ -92,8 +90,7 @@ tracks/0/keys = {
 "values": [ 1, 2, 3, 4 ]
 }
 
-[sub_resource type="Animation" id=3]
-resource_name = "Stand"
+[sub_resource type="Animation" id=7]
 length = 0.0166667
 step = 0.0166667
 tracks/0/type = "value"
@@ -133,12 +130,12 @@ position = Vector2( 0, -15 )
 shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/Death = SubResource( 6 )
-anims/Fall = SubResource( 5 )
-anims/Hurt = SubResource( 7 )
-anims/Jump = SubResource( 4 )
-anims/Run = SubResource( 2 )
-anims/Stand = SubResource( 3 )
+anims/Death = SubResource( 2 )
+anims/Fall = SubResource( 3 )
+anims/Hurt = SubResource( 4 )
+anims/Jump = SubResource( 5 )
+anims/Run = SubResource( 6 )
+anims/Stand = SubResource( 7 )
 
 [node name="RayCast2D_0" type="RayCast2D" parent="."]
 position = Vector2( -2, -1 )

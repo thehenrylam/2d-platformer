@@ -23,6 +23,8 @@ public class Player : KinematicBody2D
 	[Export]
 	public float JUMP_FORCE = 140;
 	
+	private bool isDead = false;
+
 	private Vector2 motion = Vector2.Zero;
 
 	private Sprite sprite = null;
@@ -40,8 +42,27 @@ public class Player : KinematicBody2D
 
 	public override void _PhysicsProcess(float delta)
 	{
+		if (isDead) 
+		{
+			this.animationPlayer.Play("Death");
+			return;
+		}
+
 		CheckCollisions();
 
+		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+
+		// Determine if the player is touching the ground.
+		bool isTouchingGround = IsTouchingGround(this.raycasts) || IsOnFloor();
+
+		// Process the player's movement (by player input)
+		motion = ProcessMovement(motion, delta, isTouchingGround);
+		
+		// Determine the current animation
+		string animationName = ProcessAnimation(motion, isTouchingGround);
+
+		# region oldcode
+		/*
 		float TARGET_FPS = Engine.GetFramesPerSecond();
 
 		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
@@ -95,9 +116,94 @@ public class Player : KinematicBody2D
 				motion.x = Mathf.Lerp(motion.x, 0, AIR_RESISTANCE * delta);
 			}
 		}
+		*/
+		# endregion oldcode
+
+		if (animationName != null) { this.animationPlayer.Play(animationName); }
+
+		if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
 
 		motion = MoveAndSlide(motion, Vector2.Up);		
 	}
+
+	private Vector2 ProcessMovement(Vector2 trajectory, float delta, bool isTouchingGround) 
+	{
+		// Horizontal Resistance Factor is determines how fast the player stops moving in the x axis.
+		float horizResistanceFactor = 0;
+
+		// Get target fps from the Game Engine.
+		float TARGET_FPS = Engine.GetFramesPerSecond();
+
+		// Retrieve the player's input in the horizontal direction.
+		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+		if (xInput != 0)
+		{
+			// If the horizontal input is not 0... (Player is pressing the left or right direction but not both)
+			trajectory.x += xInput * ACCELERATION * delta * TARGET_FPS;
+			trajectory.x = Mathf.Clamp(trajectory.x, -MAX_SPEED, MAX_SPEED);
+		}
+		else
+		{
+			// If the horizontal input is 0... (Player is not inputting to any specific direction horizontally)
+
+			// Determine the horizontal resistance factor (regular friction on ground? Or air resistance in air?)
+			horizResistanceFactor = (isTouchingGround) ? FRICTION : AIR_RESISTANCE;
+			// Gradually approach 0 from the trajectory's original x value by the weight of (resistance factor * delta)
+			trajectory.x = Mathf.Lerp(trajectory.x, 0, horizResistanceFactor * delta);
+		}
+
+		// Determine the downwards trajectory in the vertical direction
+		trajectory.y += GRAVITY * delta * TARGET_FPS;
+
+		if (isTouchingGround) 
+		{
+			// If the "jump" button was just pressed, then travel in the 
+			// upwards direction by the JUMP_FORCE's magnitude.
+			if (Input.IsActionJustPressed("ui_up")) 
+			{
+				trajectory.y = -JUMP_FORCE;
+			}	
+		}
+		else 
+		{
+			// If the "jump" button was just released AND that the upwards trajectory 
+			// is still greater than half of the JUMP_FORCE,
+			// then set the trajectory to half their jump force.
+			if (Input.IsActionJustReleased("ui_up") && trajectory.y < -JUMP_FORCE/2) 
+			{
+				trajectory.y = -JUMP_FORCE/2;
+			}
+		}
+
+		return trajectory;
+	}
+
+	private string ProcessAnimation(Vector2 trajectory, bool isTouchingGround)
+	{
+		string animationName = "Stand";
+
+		if (isTouchingGround) 
+		{
+			float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+			if (xInput != 0) 
+			{
+				animationName = "Run";
+			}
+		}
+		else
+		{
+			if (IsPlayerMovingUp(motion))
+			{
+				animationName = "Jump";
+			}
+			else
+			{
+				animationName = "Fall";
+			}
+		}
+
+		return animationName;
+	} 
 
 	private bool IsTouchingGround(List<RayCast2D> raycasts) 
 	{
@@ -143,17 +249,11 @@ public class Player : KinematicBody2D
 
 	private void Kill() 
 	{
-		this.SetPhysicsProcess(false);
-		// this.animationPlayer.Stop();
-		this.animationPlayer.Play("Hurt");
-		Hide();
-		QueueFree();
-		GD.Print("Died");
+		isDead = true;
 	}
 
 	public void OnAnimationPlayerAnimationFinished(string animationName) 
 	{
-		//GD.Print(animationName);
 		if (animationName == "Death") 
 		{
 			Hide();
