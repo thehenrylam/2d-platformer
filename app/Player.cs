@@ -11,18 +11,22 @@ public class Player : KinematicBody2D
 	public delegate void Damage();
 
 	[Export]
-	private float ACCELERATION = 8;
+	private float ACCELERATION = 12;
 	[Export]
-	private float MAX_SPEED = 64;
+	private float MAX_SPEED = 96;
 	[Export]
-	private float FRICTION = 8;
+	private float FRICTION = 16;
 	[Export]
 	private float AIR_RESISTANCE = 1;
 	[Export]
-	private float GRAVITY = 4;
+	private float GRAVITY = 8;
 	[Export]
-	public float JUMP_FORCE = 140;
-	
+	public float JUMP_FORCE = 240;
+	[Export]
+	public float COYOTE_TIME = 0.1f;
+
+	private int playerJumpTally = 0;
+	private int coyoteTimeState = 0;
 	private bool isDead = false;
 
 	private Vector2 motion = Vector2.Zero;
@@ -30,6 +34,7 @@ public class Player : KinematicBody2D
 	private Sprite sprite = null;
 	private AnimationPlayer animationPlayer = null;
 	private List<RayCast2D> raycasts = new List<RayCast2D>();
+	private Timer coyoteTimer = null;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -38,6 +43,8 @@ public class Player : KinematicBody2D
 		this.animationPlayer = this.GetNode<AnimationPlayer>("AnimationPlayer");
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_0"));
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_1"));
+		this.coyoteTimer = this.GetNode<Timer>("CoyoteTimer");
+		this.coyoteTimer.WaitTime = COYOTE_TIME;
 	}
 
 	public override void _PhysicsProcess(float delta)
@@ -55,9 +62,28 @@ public class Player : KinematicBody2D
 		// Determine if the player is touching the ground.
 		bool isTouchingGround = IsTouchingGround(this.raycasts) || IsOnFloor();
 
+		if (isTouchingGround)
+		{
+			this.coyoteTimeState = 0;
+			this.playerJumpTally = 0;
+
+			if (!this.coyoteTimer.IsStopped()) 
+			{
+				this.coyoteTimer.Stop();
+			}
+		}
+		else 
+		{
+			if ((this.playerJumpTally == 0) && (this.coyoteTimeState == 0))
+			{
+				this.coyoteTimeState = 1;
+				this.coyoteTimer.Start(COYOTE_TIME);
+			}
+		}
+
 		// Process the player's movement (by player input)
 		motion = ProcessMovement(motion, delta, isTouchingGround);
-		
+
 		// Determine the current animation
 		string animationName = ProcessAnimation(motion, isTouchingGround);
 
@@ -155,14 +181,19 @@ public class Player : KinematicBody2D
 		// Determine the downwards trajectory in the vertical direction
 		trajectory.y += GRAVITY * delta * TARGET_FPS;
 
-		if (isTouchingGround) 
+		if ((isTouchingGround || (this.coyoteTimeState == 1)) && (this.playerJumpTally <= 0)) 
 		{
 			// If the "jump" button was just pressed, then travel in the 
 			// upwards direction by the JUMP_FORCE's magnitude.
 			if (Input.IsActionJustPressed("ui_up")) 
 			{
+				this.playerJumpTally += 1;
 				trajectory.y = -JUMP_FORCE;
-			}	
+			}
+			else
+			{
+				this.playerJumpTally = 0;
+			}
 		}
 		else 
 		{
@@ -243,13 +274,8 @@ public class Player : KinematicBody2D
 		if (damage > 0)
 		{
 			GD.Print("Damage");
-			Kill();
+			isDead = true;
 		}
-	}
-
-	private void Kill() 
-	{
-		isDead = true;
 	}
 
 	public void OnAnimationPlayerAnimationFinished(string animationName) 
@@ -259,5 +285,12 @@ public class Player : KinematicBody2D
 			Hide();
 			QueueFree();
 		}
+	}
+
+	public void OnCoyoteTimerTimeout()
+	{
+		// "Locks" the coyote time down so that it cannot be
+		// reactivated again until the player touches the ground.
+		this.coyoteTimeState = -1;
 	}
 }

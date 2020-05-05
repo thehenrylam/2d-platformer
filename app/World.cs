@@ -11,14 +11,14 @@ public class World : Node2D
     [Signal]
     public delegate void NewPlayer();
 
-    private Position2D startPosition;
+    private Area2D checkpoint;
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        this.startPosition = this.GetNode<Position2D>("StartPoint");
-
+        this.checkpoint = this.GetNode<Area2D>("Checkpoint");
         RemoveAllPlayers();
+        SpawnPlayer(this.checkpoint.Position);
     }
 
     public override void _Process(float delta)
@@ -26,35 +26,40 @@ public class World : Node2D
         if (Input.IsActionJustPressed("retry"))
         {
             GD.Print("Retrying...");
+            // If the player's input pressed retry, 
+            // then remove the current player (if there is any),
+            // and spawn a new playable character.
             RemoveAllPlayers();
-            SpawnPlayer(this.startPosition.Position);
+            SpawnPlayer(this.checkpoint.Position);
         }
     }
 
     private void RemoveAllPlayers() 
     {
+        // Create a regex string
         string regexString = String.Format("@?({0})@?.*", "Player");
-        GD.Print(regexString);
-
+        // Get a list of player node names
         List<string> playerNodeNames = new List<string>();
-
-        GD.Print(this.GetChildren());
 
         foreach (Node2D node in this.GetChildren())
         {
-            GD.Print(node.Name);
+            // For each node within the current node's (world node) children...
 
             if (Regex.IsMatch(node.Name, regexString))
             {
-                // GD.Print(node.Name);
+                // Add the player node names onto the list if the regex string matches it.
                 playerNodeNames.Add(node.Name);
             }
         }
 
         if (playerNodeNames.Count > 0)
         {
+            // If the node name list is not empty, then...
+
             foreach (string s in playerNodeNames)
             {
+                // Get all the nodes from the pertaining to 
+                // those names and remove them from the game. 
                 KinematicBody2D instance = this.GetNode<KinematicBody2D>(s);
                 instance.Hide();
                 instance.QueueFree();
