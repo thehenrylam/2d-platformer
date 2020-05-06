@@ -23,9 +23,12 @@ public class Player : KinematicBody2D
 	[Export]
 	public float JUMP_FORCE = 240;
 	[Export]
+	public float FAST_FALL_FACTOR = 0.75f;
+	[Export]
 	public float COYOTE_TIME = 0.1f;
 
 	private int playerJumpTally = 0;
+	private int playerFastFallTally = 0;
 	private int coyoteTimeState = 0;
 	private bool isDead = false;
 
@@ -66,6 +69,7 @@ public class Player : KinematicBody2D
 		{
 			this.coyoteTimeState = 0;
 			this.playerJumpTally = 0;
+			this.playerFastFallTally = 0;
 
 			if (!this.coyoteTimer.IsStopped()) 
 			{
@@ -87,69 +91,11 @@ public class Player : KinematicBody2D
 		// Determine the current animation
 		string animationName = ProcessAnimation(motion, isTouchingGround);
 
-		# region oldcode
-		/*
-		float TARGET_FPS = Engine.GetFramesPerSecond();
-
-		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
-
-		if (xInput != 0)
-		{
-			this.animationPlayer.Play("Run");
-
-			motion.x += xInput * ACCELERATION * delta * TARGET_FPS;
-			motion.x = Mathf.Clamp(motion.x, -MAX_SPEED, MAX_SPEED);
-
-			this.sprite.FlipH = xInput > 0;
-		}
-		else
-		{
-			this.animationPlayer.Play("Stand");
-		}
-
-		motion.y += GRAVITY * delta * TARGET_FPS;
-
-		if (IsTouchingGround(this.raycasts) || IsOnFloor()) 
-		{
-			if (xInput == 0) 
-			{
-				motion.x = Mathf.Lerp(motion.x, 0, FRICTION * delta);
-			}
-
-			if (Input.IsActionJustPressed("ui_up")) 
-			{
-				motion.y = -JUMP_FORCE;
-			}	
-		}
-		else 
-		{
-			if (IsPlayerMovingUp(motion))
-			{
-				this.animationPlayer.Play("Jump");
-			}
-			else 
-			{
-				this.animationPlayer.Play("Fall");
-			}
-
-			if (Input.IsActionJustReleased("ui_up") && motion.y < -JUMP_FORCE/2) 
-			{
-				motion.y = -JUMP_FORCE/2;
-			}
-
-			if (xInput == 0)
-			{
-				motion.x = Mathf.Lerp(motion.x, 0, AIR_RESISTANCE * delta);
-			}
-		}
-		*/
-		# endregion oldcode
-
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
 		if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
 
-		motion = MoveAndSlide(motion, Vector2.Up);		
+		motion = MoveAndSlide(motion, Vector2.Up);	
 	}
 
 	private Vector2 ProcessMovement(Vector2 trajectory, float delta, bool isTouchingGround) 
@@ -162,6 +108,7 @@ public class Player : KinematicBody2D
 
 		// Retrieve the player's input in the horizontal direction.
 		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+
 		if (xInput != 0)
 		{
 			// If the horizontal input is not 0... (Player is pressing the left or right direction but not both)
@@ -188,6 +135,7 @@ public class Player : KinematicBody2D
 			if (Input.IsActionJustPressed("ui_up")) 
 			{
 				this.playerJumpTally += 1;
+				this.playerFastFallTally = 0;
 				trajectory.y = -JUMP_FORCE;
 			}
 			else
@@ -206,6 +154,18 @@ public class Player : KinematicBody2D
 			}
 		}
 
+		bool crouch = Input.IsActionPressed("ui_down");
+		if (crouch) 
+		{
+			if (this.playerFastFallTally == 0)
+			{
+				this.playerFastFallTally += 1;
+				trajectory.y += JUMP_FORCE * FAST_FALL_FACTOR;
+			}
+
+			if (isTouchingGround) { trajectory.x = 0; }
+		}
+
 		return trajectory;
 	}
 
@@ -216,7 +176,14 @@ public class Player : KinematicBody2D
 		if (isTouchingGround) 
 		{
 			float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
-			if (xInput != 0) 
+
+			bool crouch = Input.IsActionPressed("ui_down");
+
+			if (crouch)
+			{
+				animationName = "Crouch";
+			}
+			else if (xInput != 0) 
 			{
 				animationName = "Run";
 			}

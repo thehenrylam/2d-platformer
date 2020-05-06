@@ -486,7 +486,7 @@ script = ExtResource( 5 )
 player = ExtResource( 1 )
 
 [node name="StartPosition" type="Position2D" parent="."]
-position = Vector2( 54, 302 )
+position = Vector2( 54, 311 )
 
 [node name="Spikes" type="TileMap" parent="."]
 tile_set = SubResource( 2 )
