@@ -1,8 +1,7 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://assets/Flag.png" type="Texture" id=1]
 [ext_resource path="res://Goalpoint.cs" type="Script" id=2]
-[ext_resource path="res://GoalpointAnimationPlayer.tscn" type="PackedScene" id=3]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 14, 15 )
@@ -27,7 +26,6 @@ tracks/0/keys = {
 
 [node name="Goalpoint" type="Area2D"]
 script = ExtResource( 2 )
-animationPlayer = ExtResource( 3 )
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, -16 )

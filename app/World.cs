@@ -21,6 +21,9 @@ public class World : Node2D
     {
         ConnectAll();
 
+        UI ui = this.GetNode<UI>("UI");
+        ui.HideWinScreen();
+
         Position2D startPosition = this.GetNode<Position2D>("StartPosition");
         this.spawnPosition = startPosition.Position;
 
@@ -38,6 +41,9 @@ public class World : Node2D
             // and spawn a new playable character.
             RemoveAllPlayers();
             SpawnPlayer(this.spawnPosition);
+
+            UI ui = this.GetNode<UI>("UI");
+            ui.HideWinScreen();
         }
     }
 
@@ -50,18 +56,31 @@ public class World : Node2D
 
         foreach (Node2D node in this.GetChildren())
         {
-            bool t = test.Contains(node.Name);
 
-            if ((!this.IsConnected("NewPlayer", node, "OnNewPlayer")) && t)
+            GD.Print(node.Name);
+
+            Spikes s = AttemptCast<Spikes>(node);
+            if (s != null)
             {
-                this.Connect("NewPlayer", node, "OnNewPlayer");
+                GD.Print("Spikes Spikes Spikes");
+                // Connect this node's NewPlayer signal to the spike's OnNewPlayer method
+                this.Connect("NewPlayer", s, "OnNewPlayer");
             }
 
             Checkpoint c = AttemptCast<Checkpoint>(node);
             if (c != null)
             {
+                // Connect the checkpoint's Activated signal to this node's OnCheckpointActivate method
                 c.Connect("Activated", this, nameof(OnCheckpointActivate));
+                // Add the checkpoint name to the list of checkpoint node names
                 listCheckpointNodeNames.Add(c.Name);
+            }
+
+            Goalpoint g = AttemptCast<Goalpoint>(node);
+            if (g != null)
+            {
+                // Connect the goalpoint's Activated signal to this node's OnGoalpointActivate method
+                g.Connect("Activated", this, nameof(OnGoalpointActivate));
             }
 
         }
@@ -162,4 +181,16 @@ public class World : Node2D
             }
         }
     }
+
+    public void OnGoalpointActivate(Node entity, Goalpoint sender)
+    {
+        if (!this.listPlayerNodeNames.Contains(entity.Name)) { return; }
+
+        UI ui = this.GetNode<UI>("UI");
+        ui.ShowWinScreen();
+
+        Position2D startPosition = this.GetNode<Position2D>("StartPosition");
+        this.spawnPosition = startPosition.Position;
+    }
+
 }

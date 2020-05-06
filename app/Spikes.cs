@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class TileMap_Spikes : TileMap
+public class Spikes : TileMap
 {
     public string pathOfPlayer = "../Player";
 
