@@ -1,3 +1,4 @@
+using Godot;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +13,15 @@ public class PlayerState
             // Can only jump when...
             // the player is (touching the ground OR coyoteTime is active) AND
             // did not jump before hand.
-            return ((touchingGround || (coyoteTimeState == 1)) && (jumpTally <= 0)); 
+            return ((touchingGround || IsCoyoteTimeActive) && (jumpTally <= 0)); 
+        }
+    }
+
+    public bool CanStartCoyoteTime
+    {
+        get 
+        {
+            return ((this.jumpTally <= 0) && (this.coyoteTimeState == 0));
         }
     }
 
@@ -22,7 +31,7 @@ public class PlayerState
         { 
             // Can only fast fall when...
             // the player did not fast fall before.
-            return (fastFallTally == 0); 
+            return ((fastFallTally == 0) && (!this.IsGrounded)); 
         }
     }
 
@@ -34,17 +43,17 @@ public class PlayerState
             // the player is NOT touching the ground AND
             // did not air dash beforehand AND
             // an air dash is not currently active.
-            return (((!touchingGround) && (airDashTally <= 0)) && (this.airDashState == 0));
+            return (((!this.touchingGround) && (this.airDashTally <= 0)) && (this.airDashState == 0));
         }
     }
 
     public bool IsDead
     {
-        get { return deathFlag; }
+        get { return this.deathFlag; }
         set
         {
-            deathFlag = value;
-            if (deathFlag)
+            this.deathFlag = value;
+            if (this.deathFlag)
             {
                 PlayerDied?.Invoke(this, null);
             }
@@ -69,28 +78,21 @@ public class PlayerState
                     this.fastFallTally = 0;
                     this.airDashTally = 0;
                 }
-                else 
-                {
-                    if ((this.jumpTally == 0) && (this.coyoteTimeState == 0))
-                    {
-                        // If the player has not jumped before 
-                        // and the coyoteTimeState is primed,
-                        // then activate coyote time.
-                        this.coyoteTimeState = 1;
-                    }
-                }
             }
         }
     }
 
-    public bool IsAirDashActive
+    public bool IsCoyoteTimeActive
     {
-        get { return (this.airDashState == 1); }
+        get 
+        {
+            return (this.coyoteTimeState == 1);
+        }
     }
 
-    public bool IsDashing
+    public bool IsAirDashing
     {
-        get { return false; }
+        get { return (this.airDashState == 1); }
     }
 
     private bool touchingGround = true;
@@ -103,7 +105,6 @@ public class PlayerState
     
     public PlayerState()
     {
-
     }
 
     public bool Jumped(bool force=false)
@@ -163,6 +164,18 @@ public class PlayerState
         if (isLegal || force)
         {
             this.IsDead = true;
+        }
+
+        return isLegal;
+    }
+
+    public bool CoyoteTimeStarted(bool force=false)
+    {
+        bool isLegal = this.CanStartCoyoteTime;
+
+        if (isLegal || force)
+        {
+            this.coyoteTimeState = 1;
         }
 
         return isLegal;

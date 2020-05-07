@@ -40,25 +40,32 @@ public class Player : KinematicBody2D
 	#endregion
 
 	#region Properties
-	public bool StateGrounded
+	public bool IsGrounded
 	{
-		get { return (IsTouchingGround(this.raycasts) || IsOnFloor()); }
+		get { return this.State.IsGrounded; }
+		set { this.State.IsGrounded = value; }
 	}
 
-	public bool StateMidair
+	public bool IsMidair
 	{
-		get { return !StateGrounded; }
+		get { return !IsGrounded; }
+		set { this.IsGrounded = !value; }
 	}
 
-	public bool StateDashing
+	public bool IsAirDashing
 	{
-		get { return false; }
+		get { return this.State.IsAirDashing; }
 	}
 
-	public bool StateDead
+	public bool IsDead
 	{
-		get { return deathFlag; }
-		set { deathFlag = value; }
+		get { return this.State.IsDead; }
+		set { this.State.IsDead = value; }
+	}
+
+	public PlayerState State
+	{
+		get { return this.playerState; }
 	}
 
 	public List<KinematicCollision2D> CurCollisions
@@ -74,11 +81,7 @@ public class Player : KinematicBody2D
 	#endregion
 
 	#region Fields
-	// private PlayerState playerState = null;
-	private int playerJumpTally = 0;
-	private int playerFastFallTally = 0;
-	private int coyoteTimeState = 0;
-	private bool deathFlag = false;
+	private PlayerState playerState = new PlayerState();
 	private Vector2 motion = Vector2.Zero;
 	#endregion
 
@@ -98,21 +101,16 @@ public class Player : KinematicBody2D
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_1"));
 		this.coyoteTimer = this.GetNode<Timer>("CoyoteTimer");
 		this.coyoteTimer.WaitTime = COYOTE_TIME;
-
-		PlayerState playerState = new PlayerState();
-		// this.playerState.PlayerDied += new EventHandler(HandleDeath);
 	}
 
 	public override void _PhysicsProcess(float delta)
 	{
-		// Stop the process from continuing any further
-		// if the death flag has been raised.
-		if (deathFlag)
+		if (this.IsDead)
 		{
-			if (this.animationPlayer.CurrentAnimation != "Death")
-			{
-				this.animationPlayer.Play("Death");
-			}
+			// Plays the "Death" animation once 
+			// (The reason why we don't use "Play" is because it will 
+			// repeatedly play the death animation over and over again)
+			this.animationPlayer.CurrentAnimation = "Death";
 			return;
 		}
 
@@ -121,40 +119,32 @@ public class Player : KinematicBody2D
 		{
 			EmitSignal("Collided", kc, this);
 		}
-		// CheckCollisions();
 
 		Vector2 dirInfluence = this.DirectionalInfluence;
 
-		// float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
-
-		// Determine if the player is touching the ground.
-		bool isTouchingGround = this.StateGrounded;
-
-		if (isTouchingGround)
+		this.IsGrounded = IsTouchingGround(this.raycasts);
+		if (this.IsGrounded)
 		{
-			this.coyoteTimeState = 0;
-			this.playerJumpTally = 0;
-			this.playerFastFallTally = 0;
-
-			if (!this.coyoteTimer.IsStopped()) 
+			// If the player is somehow grounded before the coyoteTimer has triggered, stop it. 
+			if (!this.coyoteTimer.IsStopped())
 			{
 				this.coyoteTimer.Stop();
 			}
 		}
 		else 
 		{
-			if ((this.playerJumpTally == 0) && (this.coyoteTimeState == 0))
+			if (this.State.CanStartCoyoteTime)
 			{
-				this.coyoteTimeState = 1;
+				this.State.CoyoteTimeStarted();
 				this.coyoteTimer.Start(COYOTE_TIME);
 			}
 		}
 
 		// Process the player's movement (by player input)
-		motion = ProcessMovement(motion, delta, isTouchingGround);
+		motion = ProcessMovement(motion, delta, this.IsGrounded);
 
 		// Determine the current animation
-		string animationName = ProcessAnimation(motion, isTouchingGround);
+		string animationName = ProcessAnimation(motion, this.IsGrounded);
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
 		// if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
@@ -167,7 +157,6 @@ public class Player : KinematicBody2D
 	{
 		// Horizontal Resistance Factor is determines how fast the player stops moving in the x axis.
 		float horizResistanceFactor = 0;
-
 		// Get target fps from the Game Engine.
 		float TARGET_FPS = Engine.GetFramesPerSecond();
 
@@ -185,7 +174,7 @@ public class Player : KinematicBody2D
 			// If the horizontal input is 0... (Player is not inputting to any specific direction horizontally)
 
 			// Determine the horizontal resistance factor (regular friction on ground? Or air resistance in air?)
-			horizResistanceFactor = (isTouchingGround) ? FRICTION : AIR_RESISTANCE;
+			horizResistanceFactor = (this.IsGrounded) ? FRICTION : AIR_RESISTANCE;
 			// Gradually approach 0 from the trajectory's original x value by the weight of (resistance factor * delta)
 			trajectory.x = Mathf.Lerp(trajectory.x, 0, horizResistanceFactor * delta);
 		}
@@ -193,19 +182,14 @@ public class Player : KinematicBody2D
 		// Determine the downwards trajectory in the vertical direction
 		trajectory.y += GRAVITY * delta * TARGET_FPS;
 
-		if ((isTouchingGround || (this.coyoteTimeState == 1)) && (this.playerJumpTally <= 0)) 
+		if (this.State.CanJump) 
 		{
 			// If the "jump" button was just pressed, then travel in the 
 			// upwards direction by the JUMP_FORCE's magnitude.
 			if (Input.IsActionJustPressed("ui_up")) 
 			{
-				this.playerJumpTally += 1;
-				this.playerFastFallTally = 0;
+				this.State.Jumped();
 				trajectory.y = -JUMP_FORCE;
-			}
-			else
-			{
-				this.playerJumpTally = 0;
 			}
 		}
 		else 
@@ -222,13 +206,13 @@ public class Player : KinematicBody2D
 		bool crouch = Input.IsActionPressed("ui_down");
 		if (crouch) 
 		{
-			if (this.playerFastFallTally == 0)
+			if (this.State.CanFastFall)
 			{
-				this.playerFastFallTally += 1;
+				this.State.FastFallen();
 				trajectory.y += JUMP_FORCE * FAST_FALL_FACTOR;
 			}
 
-			if (isTouchingGround) { trajectory.x = 0; }
+			if (this.IsGrounded) { trajectory.x = 0; }
 		}
 
 		return trajectory;
@@ -276,7 +260,7 @@ public class Player : KinematicBody2D
 			raycastCollisions = raycastCollisions || raycast.IsColliding();
 		}
 
-		return raycastCollisions;
+		return raycastCollisions && IsOnFloor();
 	}
 
 	private bool IsPlayerMovingUp(Vector2 trajectory) 
@@ -333,16 +317,13 @@ public class Player : KinematicBody2D
 
 	private void OnPlayerDamage(int damage) 
 	{
-		if (damage > 0)
-		{
-			GD.Print("Damage");
-			deathFlag = true;
-		}
+		this.State.Damaged(damage);
+		this.IsDead = true;
 	}
 
 	public void OnAnimationPlayerAnimationFinished(string animationName) 
 	{
-		if ((animationName == "Death") && deathFlag)
+		if ((animationName == "Death") && this.IsDead)
 		{
 			Hide();
 			SetPhysicsProcess(false);
@@ -354,6 +335,8 @@ public class Player : KinematicBody2D
 	{
 		// "Locks" the coyote time down so that it cannot be
 		// reactivated again until the player touches the ground.
-		this.coyoteTimeState = -1;
+		// this.coyoteTimeState = -1;
+		this.State.CoyoteTimeFinished();
 	}
+
 }
