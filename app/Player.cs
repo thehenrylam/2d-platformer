@@ -4,12 +4,16 @@ using System.Collections.Generic;
 
 public class Player : KinematicBody2D
 {
+	#region SignalValues
 	[Signal]
 	public delegate void Collided();
-
 	[Signal]
 	public delegate void Damage();
+	[Signal]
+	public delegate void PlayerDied();
+	#endregion
 
+	#region ExportedValues
 	[Export]
 	private float ACCELERATION = 12;
 	[Export]
@@ -26,18 +30,64 @@ public class Player : KinematicBody2D
 	public float FAST_FALL_FACTOR = 0.75f;
 	[Export]
 	public float COYOTE_TIME = 0.1f;
+	#endregion
 
+	#region Constants
+	private const string INPUT_UP = "ui_up";
+	private const string INPUT_RIGHT = "ui_right";
+	private const string INPUT_LEFT = "ui_left";
+	private const string INPUT_DOWN = "ui_down";
+	#endregion
+
+	#region Properties
+	public bool StateGrounded
+	{
+		get { return (IsTouchingGround(this.raycasts) || IsOnFloor()); }
+	}
+
+	public bool StateMidair
+	{
+		get { return !StateGrounded; }
+	}
+
+	public bool StateDashing
+	{
+		get { return false; }
+	}
+
+	public bool StateDead
+	{
+		get { return deathFlag; }
+		set { deathFlag = value; }
+	}
+
+	public List<KinematicCollision2D> CurCollisions
+	{
+		get { return GetCollisions(); }
+	}
+
+	public Vector2 DirectionalInfluence
+	{
+		get { return GetDirectionalInflence(); }
+	}
+
+	#endregion
+
+	#region Fields
+	// private PlayerState playerState = null;
 	private int playerJumpTally = 0;
 	private int playerFastFallTally = 0;
 	private int coyoteTimeState = 0;
-	private bool isDead = false;
-
+	private bool deathFlag = false;
 	private Vector2 motion = Vector2.Zero;
+	#endregion
 
+	#region Nodes
 	private Sprite sprite = null;
 	private AnimationPlayer animationPlayer = null;
 	private List<RayCast2D> raycasts = new List<RayCast2D>();
 	private Timer coyoteTimer = null;
+	#endregion
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -48,22 +98,37 @@ public class Player : KinematicBody2D
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_1"));
 		this.coyoteTimer = this.GetNode<Timer>("CoyoteTimer");
 		this.coyoteTimer.WaitTime = COYOTE_TIME;
+
+		PlayerState playerState = new PlayerState();
+		// this.playerState.PlayerDied += new EventHandler(HandleDeath);
 	}
 
 	public override void _PhysicsProcess(float delta)
 	{
-		if (isDead) 
+		// Stop the process from continuing any further
+		// if the death flag has been raised.
+		if (deathFlag)
 		{
-			this.animationPlayer.Play("Death");
+			if (this.animationPlayer.CurrentAnimation != "Death")
+			{
+				this.animationPlayer.Play("Death");
+			}
 			return;
 		}
 
-		CheckCollisions();
+		// Emit collision signals for each collision detected
+		foreach (KinematicCollision2D kc in this.CurCollisions)
+		{
+			EmitSignal("Collided", kc, this);
+		}
+		// CheckCollisions();
 
-		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+		Vector2 dirInfluence = this.DirectionalInfluence;
+
+		// float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
 
 		// Determine if the player is touching the ground.
-		bool isTouchingGround = IsTouchingGround(this.raycasts) || IsOnFloor();
+		bool isTouchingGround = this.StateGrounded;
 
 		if (isTouchingGround)
 		{
@@ -90,10 +155,10 @@ public class Player : KinematicBody2D
 
 		// Determine the current animation
 		string animationName = ProcessAnimation(motion, isTouchingGround);
-
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
-		if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
+		// if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
+		if (dirInfluence.x != 0) { this.sprite.FlipH = dirInfluence.x > 0; }
 
 		motion = MoveAndSlide(motion, Vector2.Up);	
 	}
@@ -236,21 +301,52 @@ public class Player : KinematicBody2D
 		}
 	}
 
+	private List<KinematicCollision2D> GetCollisions()
+	{
+		List<KinematicCollision2D> output = new List<KinematicCollision2D>();
+		for (int i=0; i < GetSlideCount(); i++)
+		{
+			KinematicCollision2D c = GetSlideCollision(i);
+			if (c != null) { output.Add(c); }
+		}
+		return output;
+	}
+
+	private Vector2 GetDirectionalInflence()
+	{
+		// Something to note to help make what is happening below make more sense:
+		// The TOP-LEFT corner is (0, 0)
+		// The BOTTOM-RIGHT corner is (maxWidth, maxHeight),
+
+		// If the user has their input more towards the right, the x value will be positive.
+		// If the user has their input more towards the left, the x value will be negative.
+		// If the user has their input neutral or providing equal input to left and right, the x value will be 0.
+		float x = Input.GetActionStrength(INPUT_RIGHT) - Input.GetActionStrength(INPUT_LEFT);
+
+		// If the user has their input more downwards, the y value will be positive.
+		// If the user has their input more upwards, the y value will be negative.
+		// If the user has their input neutral or providing equal input to up and down, the y value will be 0.
+		float y = Input.GetActionStrength(INPUT_DOWN) - Input.GetActionStrength(INPUT_UP);
+
+		return new Vector2(x, y);
+	}
+
 	private void OnPlayerDamage(int damage) 
 	{
 		if (damage > 0)
 		{
 			GD.Print("Damage");
-			isDead = true;
+			deathFlag = true;
 		}
 	}
 
 	public void OnAnimationPlayerAnimationFinished(string animationName) 
 	{
-		if (animationName == "Death") 
+		if ((animationName == "Death") && deathFlag)
 		{
 			Hide();
-			QueueFree();
+			SetPhysicsProcess(false);
+			EmitSignal(nameof(PlayerDied), this);
 		}
 	}
 
