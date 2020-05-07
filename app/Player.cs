@@ -73,11 +73,6 @@ public class Player : KinematicBody2D
 		get { return GetCollisions(); }
 	}
 
-	public Vector2 DirectionalInfluence
-	{
-		get { return GetDirectionalInflence(); }
-	}
-
 	#endregion
 
 	#region Fields
@@ -120,8 +115,6 @@ public class Player : KinematicBody2D
 			EmitSignal("Collided", kc, this);
 		}
 
-		Vector2 dirInfluence = this.DirectionalInfluence;
-
 		this.IsGrounded = IsTouchingGround(this.raycasts);
 		if (this.IsGrounded)
 		{
@@ -141,32 +134,32 @@ public class Player : KinematicBody2D
 		}
 
 		// Process the player's movement (by player input)
-		motion = ProcessMovement(motion, delta, this.IsGrounded);
+		motion = ProcessMovement(motion, delta);
 
 		// Determine the current animation
-		string animationName = ProcessAnimation(motion, this.IsGrounded);
+		string animationName = ProcessAnimation(motion);
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
-		// if (xInput != 0) { this.sprite.FlipH = xInput > 0; }
+		Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
 		if (dirInfluence.x != 0) { this.sprite.FlipH = dirInfluence.x > 0; }
 
-		motion = MoveAndSlide(motion, Vector2.Up);	
+		motion = MoveAndSlide(motion, Vector2.Up);
 	}
 
-	private Vector2 ProcessMovement(Vector2 trajectory, float delta, bool isTouchingGround) 
+	private Vector2 ProcessMovement(Vector2 trajectory, float delta) 
 	{
 		// Horizontal Resistance Factor is determines how fast the player stops moving in the x axis.
 		float horizResistanceFactor = 0;
 		// Get target fps from the Game Engine.
 		float TARGET_FPS = Engine.GetFramesPerSecond();
 
-		// Retrieve the player's input in the horizontal direction.
-		float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+		// Retrieve the player's input in the horizontal/vertical direction.
+		Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
 
-		if (xInput != 0)
+		if (dirInfluence.x != 0)
 		{
 			// If the horizontal input is not 0... (Player is pressing the left or right direction but not both)
-			trajectory.x += xInput * ACCELERATION * delta * TARGET_FPS;
+			trajectory.x += dirInfluence.x * ACCELERATION * delta * TARGET_FPS;
 			trajectory.x = Mathf.Clamp(trajectory.x, -MAX_SPEED, MAX_SPEED);
 		}
 		else
@@ -186,7 +179,7 @@ public class Player : KinematicBody2D
 		{
 			// If the "jump" button was just pressed, then travel in the 
 			// upwards direction by the JUMP_FORCE's magnitude.
-			if (Input.IsActionJustPressed("ui_up")) 
+			if (PlayerInput.IsJumpButtonJustPressed()) 
 			{
 				this.State.Jumped();
 				trajectory.y = -JUMP_FORCE;
@@ -197,17 +190,20 @@ public class Player : KinematicBody2D
 			// If the "jump" button was just released AND that the upwards trajectory 
 			// is still greater than half of the JUMP_FORCE,
 			// then set the trajectory to half their jump force.
-			if (Input.IsActionJustReleased("ui_up") && trajectory.y < -JUMP_FORCE/2) 
+			if (PlayerInput.IsJumpButtonJustReleased() && trajectory.y < -JUMP_FORCE/2) 
 			{
 				trajectory.y = -JUMP_FORCE/2;
 			}
 		}
 
-		bool crouch = Input.IsActionPressed("ui_down");
-		if (crouch) 
+		if (dirInfluence.y > 0.6f) 
 		{
+			// If the directional influence is pointing downward 
+			// with enough of a magnitude (0.6f = 60%)...
 			if (this.State.CanFastFall)
 			{
+				// If the player can fast fall, 
+				// then increase the player's momentum downwards
 				this.State.FastFallen();
 				trajectory.y += JUMP_FORCE * FAST_FALL_FACTOR;
 			}
@@ -218,35 +214,28 @@ public class Player : KinematicBody2D
 		return trajectory;
 	}
 
-	private string ProcessAnimation(Vector2 trajectory, bool isTouchingGround)
+	private string ProcessAnimation(Vector2 trajectory)
 	{
 		string animationName = "Stand";
 
-		if (isTouchingGround) 
+		if (this.IsGrounded) 
 		{
-			float xInput = Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
+			// Determine the sprite based on the directional influence of the player
+			Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
 
-			bool crouch = Input.IsActionPressed("ui_down");
-
-			if (crouch)
+			if (dirInfluence.y > 0.6f)
 			{
 				animationName = "Crouch";
 			}
-			else if (xInput != 0) 
+			else if (dirInfluence.x != 0) 
 			{
 				animationName = "Run";
 			}
 		}
 		else
 		{
-			if (IsPlayerMovingUp(motion))
-			{
-				animationName = "Jump";
-			}
-			else
-			{
-				animationName = "Fall";
-			}
+			// Determine the sprite depending on the trajectory/motion of the player
+			animationName = (IsPlayerMovingUp(motion)) ? "Jump" : "Fall";
 		}
 
 		return animationName;
@@ -272,19 +261,6 @@ public class Player : KinematicBody2D
 		return false;
 	}
 
-	private void CheckCollisions() 
-	{
-		for (int i = 0; i < GetSlideCount(); i++)
-		{
-			var collision = GetSlideCollision(i);
-			if (collision != null)
-			{
-				// GD.Print(collision.Collider);
-				EmitSignal("Collided", collision, this);
-			}
-		}
-	}
-
 	private List<KinematicCollision2D> GetCollisions()
 	{
 		List<KinematicCollision2D> output = new List<KinematicCollision2D>();
@@ -294,25 +270,6 @@ public class Player : KinematicBody2D
 			if (c != null) { output.Add(c); }
 		}
 		return output;
-	}
-
-	private Vector2 GetDirectionalInflence()
-	{
-		// Something to note to help make what is happening below make more sense:
-		// The TOP-LEFT corner is (0, 0)
-		// The BOTTOM-RIGHT corner is (maxWidth, maxHeight),
-
-		// If the user has their input more towards the right, the x value will be positive.
-		// If the user has their input more towards the left, the x value will be negative.
-		// If the user has their input neutral or providing equal input to left and right, the x value will be 0.
-		float x = Input.GetActionStrength(INPUT_RIGHT) - Input.GetActionStrength(INPUT_LEFT);
-
-		// If the user has their input more downwards, the y value will be positive.
-		// If the user has their input more upwards, the y value will be negative.
-		// If the user has their input neutral or providing equal input to up and down, the y value will be 0.
-		float y = Input.GetActionStrength(INPUT_DOWN) - Input.GetActionStrength(INPUT_UP);
-
-		return new Vector2(x, y);
 	}
 
 	private void OnPlayerDamage(int damage) 
@@ -335,7 +292,6 @@ public class Player : KinematicBody2D
 	{
 		// "Locks" the coyote time down so that it cannot be
 		// reactivated again until the player touches the ground.
-		// this.coyoteTimeState = -1;
 		this.State.CoyoteTimeFinished();
 	}
 
