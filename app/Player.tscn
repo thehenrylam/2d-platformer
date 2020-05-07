@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://assets/Player.png" type="Texture" id=1]
 [ext_resource path="res://Player.cs" type="Script" id=2]
@@ -23,7 +23,7 @@ tracks/0/keys = {
 "values": [ 14 ]
 }
 
-[sub_resource type="Animation" id=10]
+[sub_resource type="Animation" id=3]
 resource_name = "Crouch"
 length = 0.05
 step = 0.05
@@ -40,7 +40,7 @@ tracks/0/keys = {
 "values": [ 16 ]
 }
 
-[sub_resource type="Animation" id=11]
+[sub_resource type="Animation" id=4]
 resource_name = "CrouchDown"
 length = 0.3
 tracks/0/type = "value"
@@ -56,7 +56,7 @@ tracks/0/keys = {
 "values": [ 0, 15, 16 ]
 }
 
-[sub_resource type="Animation" id=3]
+[sub_resource type="Animation" id=5]
 length = 0.799999
 step = 0.0333333
 tracks/0/type = "value"
@@ -72,7 +72,7 @@ tracks/0/keys = {
 "values": [ 7, 8, 9, 10, 11, 12, 13 ]
 }
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=6]
 length = 0.0166667
 step = 0.0166667
 tracks/0/type = "value"
@@ -88,7 +88,7 @@ tracks/0/keys = {
 "values": [ 6 ]
 }
 
-[sub_resource type="Animation" id=5]
+[sub_resource type="Animation" id=7]
 length = 0.133333
 loop = true
 step = 0.0333333
@@ -105,7 +105,7 @@ tracks/0/keys = {
 "values": [ 7, 8 ]
 }
 
-[sub_resource type="Animation" id=6]
+[sub_resource type="Animation" id=8]
 length = 0.0166667
 step = 0.0166667
 tracks/0/type = "value"
@@ -121,7 +121,7 @@ tracks/0/keys = {
 "values": [ 5 ]
 }
 
-[sub_resource type="Animation" id=7]
+[sub_resource type="Animation" id=9]
 loop = true
 step = 0.125
 tracks/0/type = "value"
@@ -137,7 +137,7 @@ tracks/0/keys = {
 "values": [ 1, 2, 3, 4 ]
 }
 
-[sub_resource type="Animation" id=8]
+[sub_resource type="Animation" id=10]
 length = 0.0166667
 step = 0.0166667
 tracks/0/type = "value"
@@ -153,7 +153,7 @@ tracks/0/keys = {
 "values": [ 0 ]
 }
 
-[sub_resource type="Animation" id=12]
+[sub_resource type="Animation" id=11]
 resource_name = "StandUp"
 length = 0.3
 tracks/0/type = "value"
@@ -169,11 +169,9 @@ tracks/0/keys = {
 "values": [ 16, 15, 0 ]
 }
 
-[sub_resource type="RectangleShape2D" id=9]
-extents = Vector2( 5, 16 )
-
 [node name="Player" type="KinematicBody2D"]
 script = ExtResource( 2 )
+AIR_DASH_TIME = 0.75
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, -16 )
@@ -189,15 +187,15 @@ shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/AirDash = SubResource( 2 )
-anims/Crouch = SubResource( 10 )
-anims/CrouchDown = SubResource( 11 )
-anims/Death = SubResource( 3 )
-anims/Fall = SubResource( 4 )
-anims/Hurt = SubResource( 5 )
-anims/Jump = SubResource( 6 )
-anims/Run = SubResource( 7 )
-anims/Stand = SubResource( 8 )
-anims/StandUp = SubResource( 12 )
+anims/Crouch = SubResource( 3 )
+anims/CrouchDown = SubResource( 4 )
+anims/Death = SubResource( 5 )
+anims/Fall = SubResource( 6 )
+anims/Hurt = SubResource( 7 )
+anims/Jump = SubResource( 8 )
+anims/Run = SubResource( 9 )
+anims/Stand = SubResource( 10 )
+anims/StandUp = SubResource( 11 )
 
 [node name="RayCast2D_0" type="RayCast2D" parent="."]
 position = Vector2( -2, -1 )
@@ -208,13 +206,6 @@ cast_to = Vector2( 0, 2 )
 position = Vector2( 2, -1 )
 enabled = true
 cast_to = Vector2( 0, 2 )
-
-[node name="Hitbox" type="Area2D" parent="."]
-visible = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
-position = Vector2( 0, -15 )
-shape = SubResource( 9 )
 
 [node name="CoyoteTimer" type="Timer" parent="."]
 wait_time = 0.1

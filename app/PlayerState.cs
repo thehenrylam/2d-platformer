@@ -95,6 +95,11 @@ public class PlayerState
         get { return (this.airDashState == 1); }
     }
 
+    public bool IsAirDashFinished
+    {
+        get { return ((this.airDashState == 0) && (this.airDashTally > 0)); }
+    }
+
     private bool touchingGround = true;
     private int jumpTally = 0;
     private int airDashTally = 0;

@@ -17,7 +17,9 @@ public class Player : KinematicBody2D
 	[Export]
 	private float ACCELERATION = 12;
 	[Export]
-	private float MAX_SPEED = 96;
+	private float RUN_SPEED = 96;
+	[Export]
+	private float AIR_DASH_SPEED_BOOST = 120;
 	[Export]
 	private float FRICTION = 16;
 	[Export]
@@ -28,6 +30,8 @@ public class Player : KinematicBody2D
 	public float JUMP_FORCE = 240;
 	[Export]
 	public float FAST_FALL_FACTOR = 0.75f;
+	[Export]
+	public float AIR_DASH_DISCOUNT_FACTOR = 0.15f;
 	[Export]
 	public float COYOTE_TIME = 0.1f;
 	[Export]
@@ -73,6 +77,36 @@ public class Player : KinematicBody2D
 	public List<KinematicCollision2D> CurCollisions
 	{
 		get { return GetCollisions(); }
+	}
+
+	public float MaxSpeed
+	{
+		get 
+		{
+			float output = RUN_SPEED;
+			
+			if (this.IsAirDashing)
+			{
+				output += AIR_DASH_SPEED_BOOST;
+			}
+
+			return output;
+		}
+	}
+
+	public float TotalFriction
+	{
+		get
+		{
+			float output = FRICTION;
+
+			if ((!this.IsGrounded) || this.IsAirDashing)
+			{
+				output = AIR_RESISTANCE;
+			}
+			
+			return output;
+		}
 	}
 
 	#endregion
@@ -122,7 +156,14 @@ public class Player : KinematicBody2D
 			EmitSignal("Collided", kc, this);
 		}
 
-		this.IsGrounded = IsTouchingGround(this.raycasts);
+		Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
+
+		bool currentlyTouchingGround = IsTouchingGround(this.raycasts);
+		
+		bool justLanded = (this.IsGrounded != currentlyTouchingGround) ? currentlyTouchingGround : false;
+		bool justOnAir = (this.IsGrounded != currentlyTouchingGround) ? !currentlyTouchingGround : false;
+
+		this.IsGrounded = currentlyTouchingGround;
 		if (this.IsGrounded)
 		{
 			// If the player is somehow grounded before the coyoteTimer has triggered, stop it. 
@@ -140,6 +181,23 @@ public class Player : KinematicBody2D
 			}
 		}
 
+		if (this.IsAirDashing)
+		{
+			int horizDI = Mathf.RoundToInt(dirInfluence.x);
+			horizDI = (horizDI != 0) ? horizDI/Mathf.Abs(horizDI) : 0;
+			
+			int horizTrajectory = Mathf.RoundToInt(motion.x);
+			horizTrajectory = (horizTrajectory != 0) ? horizTrajectory/Mathf.Abs(horizTrajectory) : 0;
+
+			if (justOnAir || ((horizTrajectory + horizDI) == 0))
+			{
+				this.State.AirDashFinished();
+			}
+
+		}
+
+		// GD.Print(String.Format("IsGrounded: {0}", this.IsGrounded));
+
 		// Process the player's movement (by player input)
 		motion = ProcessMovement(motion, delta);
 
@@ -147,9 +205,11 @@ public class Player : KinematicBody2D
 		string animationName = ProcessAnimation(motion);
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
-		Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
 		bool changeSpriteDirection = (dirInfluence.x != 0) && ((!this.State.IsAirDashing) || this.IsGrounded);
-		if (changeSpriteDirection) { this.sprite.FlipH = dirInfluence.x > 0; }
+		if (changeSpriteDirection) 
+		{ 
+			this.sprite.FlipH = dirInfluence.x > 0; 
+		}
 
 		motion = MoveAndSlide(motion, Vector2.Up);
 	}
@@ -157,7 +217,7 @@ public class Player : KinematicBody2D
 	private Vector2 ProcessMovement(Vector2 trajectory, float delta) 
 	{
 		// Horizontal Resistance Factor is determines how fast the player stops moving in the x axis.
-		float horizResistanceFactor = 0;
+		float totalFriction = this.TotalFriction;
 		// Get target fps from the Game Engine.
 		float TARGET_FPS = Engine.GetFramesPerSecond();
 
@@ -169,24 +229,32 @@ public class Player : KinematicBody2D
 			// If the horizontal input is not 0... (Player is pressing the left or right direction but not both)
 			trajectory.x += dirInfluence.x * ACCELERATION * delta * TARGET_FPS;
 
-			// bool testFlag = (!this.IsGrounded) && this.State.IsAirDashing;
-			// float additionalMomentum = (testFlag) ? 200 : 0;
-			float additionalMomentum = 0;
-
-			trajectory.x = Mathf.Clamp(trajectory.x, -(MAX_SPEED + additionalMomentum), (MAX_SPEED + additionalMomentum));
+			// Acts as a way to gently slow the player to the MAX_SPEED in either direction if
+			// the player has exceeded the speed limit.
+			float excessSpeed = Mathf.Abs(trajectory.x) - this.MaxSpeed;
+			if (excessSpeed > 0)
+			{
+				// Retrieve the current diection the trajectory is travelling towards
+				float xdirection = (trajectory.x > 0) ? 1 : -1;
+				// Obtain the new speed using linear interpolation
+				float newSpeed = Mathf.Lerp(Mathf.Abs(trajectory.x), this.MaxSpeed, (excessSpeed) * totalFriction * delta);
+				// There may be an edge case that causes the newSpeed to go below MAX_SPEED 
+				// (this causes stuttering for the player character),
+				// so if the newSpeed is below MAX_SPEED, set it to MAX_SPEED.
+				trajectory.x = xdirection * ((newSpeed < this.MaxSpeed) ? this.MaxSpeed : newSpeed);
+			}
 		}
 		else
 		{
 			// If the horizontal input is 0... (Player is not inputting to any specific direction horizontally)
 
-			// Determine the horizontal resistance factor (regular friction on ground? Or air resistance in air?)
-			horizResistanceFactor = (this.IsGrounded) ? FRICTION : AIR_RESISTANCE;
 			// Gradually approach 0 from the trajectory's original x value by the weight of (resistance factor * delta)
-			trajectory.x = Mathf.Lerp(trajectory.x, 0, horizResistanceFactor * delta);
+			trajectory.x = Mathf.Lerp(trajectory.x, 0, totalFriction * delta);
 		}
 
 		// Determine the downwards trajectory in the vertical direction
-		trajectory.y += (this.State.IsAirDashing) ? 0 : GRAVITY * delta * TARGET_FPS;
+		float gravity = (this.IsAirDashing) ? GRAVITY/2 : GRAVITY;
+		trajectory.y += gravity * delta * TARGET_FPS;
 
 		if (this.State.CanJump) 
 		{
@@ -213,22 +281,26 @@ public class Player : KinematicBody2D
 		{
 			if (PlayerInput.IsDashButtonPressed() && (Math.Abs(dirInfluence.x) != 0))
 			{
-				trajectory.x = dirInfluence.x * MAX_SPEED;
-				trajectory.y = dirInfluence.y * MAX_SPEED;
+				float totalMomentum = (Mathf.Abs(trajectory.x) + Mathf.Abs(trajectory.y)) * (1 - AIR_DASH_DISCOUNT_FACTOR);
+				totalMomentum += AIR_DASH_SPEED_BOOST;
+				totalMomentum = Mathf.Clamp(totalMomentum, 0, 2 * AIR_DASH_SPEED_BOOST);
+
+				float totalInfluence = Mathf.Abs(dirInfluence.x) + Mathf.Abs(dirInfluence.y);
+				Vector2 normalizedInfluence = (totalInfluence != 0) ? dirInfluence/totalInfluence : dirInfluence;
+
+				trajectory.x = normalizedInfluence.x * totalMomentum;
+				trajectory.y = normalizedInfluence.y * totalMomentum;
 
 				this.State.AirDashed();
 				this.airDashTimer.Start(AIR_DASH_TIME);
-
-				GD.Print("AirDashed!");
-				GD.Print(trajectory);
 			}
 		}
 
-		if (dirInfluence.y > 0.6f) 
+		if ((dirInfluence.y > 0.6f))
 		{
 			// If the directional influence is pointing downward 
 			// with enough of a magnitude (0.6f = 60%)...
-			if (this.State.CanFastFall)
+			if (this.State.CanFastFall && false)
 			{
 				// If the player can fast fall, 
 				// then increase the player's momentum downwards
@@ -236,7 +308,11 @@ public class Player : KinematicBody2D
 				trajectory.y += JUMP_FORCE * FAST_FALL_FACTOR;
 			}
 
-			if (this.IsGrounded) { trajectory.x = 0; }
+			if (this.IsGrounded) 
+			{ 
+				this.State.AirDashFinished();
+				trajectory.x = 0; 
+			}
 		}
 
 		return trajectory;
@@ -285,7 +361,7 @@ public class Player : KinematicBody2D
 			raycastCollisions = raycastCollisions || raycast.IsColliding();
 		}
 
-		return raycastCollisions && IsOnFloor();
+		return raycastCollisions || IsOnFloor();
 	}
 
 	private bool IsPlayerMovingUp(Vector2 trajectory) 
