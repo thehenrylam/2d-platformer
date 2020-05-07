@@ -5,24 +5,13 @@ using System.Collections.Generic;
 public static class PlayerInput
 {
     #region Constants
+    public const string INPUT_DASH = "dash";
     public const string INPUT_JUMP = "jump";
 	public const string INPUT_UP = "ui_up";
 	public const string INPUT_RIGHT = "ui_right";
 	public const string INPUT_LEFT = "ui_left";
 	public const string INPUT_DOWN = "ui_down";
 	#endregion
-
-    /*
-    public Vector2 DirectionalInfluence
-    {
-        get { return GetDirectionalInflence(); }
-    }
-
-    public bool JumpButtonPressed
-    {
-        get { return (Input.IsActionPressed(INPUT_UP) || Input.IsActionPressed(INPUT_JUMP)); }
-    }
-    */
 
     public static Vector2 GetDirectionalInflence()
 	{
@@ -56,6 +45,11 @@ public static class PlayerInput
     public static bool IsJumpButtonJustReleased()
     {
         return Input.IsActionJustReleased(INPUT_JUMP);
+    }
+
+    public static bool IsDashButtonPressed()
+    {
+        return Input.IsActionPressed(INPUT_DASH);
     }
 
 }

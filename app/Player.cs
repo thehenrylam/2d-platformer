@@ -30,6 +30,8 @@ public class Player : KinematicBody2D
 	public float FAST_FALL_FACTOR = 0.75f;
 	[Export]
 	public float COYOTE_TIME = 0.1f;
+	[Export]
+	public float AIR_DASH_TIME = 0.25f;
 	#endregion
 
 	#region Constants
@@ -85,6 +87,7 @@ public class Player : KinematicBody2D
 	private AnimationPlayer animationPlayer = null;
 	private List<RayCast2D> raycasts = new List<RayCast2D>();
 	private Timer coyoteTimer = null;
+	private Timer airDashTimer = null;
 	#endregion
 
 	// Called when the node enters the scene tree for the first time.
@@ -96,6 +99,8 @@ public class Player : KinematicBody2D
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_1"));
 		this.coyoteTimer = this.GetNode<Timer>("CoyoteTimer");
 		this.coyoteTimer.WaitTime = COYOTE_TIME;
+		this.airDashTimer = this.GetNode<Timer>("AirDashTimer");
+		this.airDashTimer.WaitTime = AIR_DASH_TIME;
 	}
 
 	public override void _PhysicsProcess(float delta)
@@ -108,6 +113,8 @@ public class Player : KinematicBody2D
 			this.animationPlayer.CurrentAnimation = "Death";
 			return;
 		}
+
+		// GD.Print(motion);
 
 		// Emit collision signals for each collision detected
 		foreach (KinematicCollision2D kc in this.CurCollisions)
@@ -141,7 +148,8 @@ public class Player : KinematicBody2D
 		if (animationName != null) { this.animationPlayer.Play(animationName); }
 
 		Vector2 dirInfluence = PlayerInput.GetDirectionalInflence();
-		if (dirInfluence.x != 0) { this.sprite.FlipH = dirInfluence.x > 0; }
+		bool changeSpriteDirection = (dirInfluence.x != 0) && ((!this.State.IsAirDashing) || this.IsGrounded);
+		if (changeSpriteDirection) { this.sprite.FlipH = dirInfluence.x > 0; }
 
 		motion = MoveAndSlide(motion, Vector2.Up);
 	}
@@ -160,7 +168,12 @@ public class Player : KinematicBody2D
 		{
 			// If the horizontal input is not 0... (Player is pressing the left or right direction but not both)
 			trajectory.x += dirInfluence.x * ACCELERATION * delta * TARGET_FPS;
-			trajectory.x = Mathf.Clamp(trajectory.x, -MAX_SPEED, MAX_SPEED);
+
+			// bool testFlag = (!this.IsGrounded) && this.State.IsAirDashing;
+			// float additionalMomentum = (testFlag) ? 200 : 0;
+			float additionalMomentum = 0;
+
+			trajectory.x = Mathf.Clamp(trajectory.x, -(MAX_SPEED + additionalMomentum), (MAX_SPEED + additionalMomentum));
 		}
 		else
 		{
@@ -173,7 +186,7 @@ public class Player : KinematicBody2D
 		}
 
 		// Determine the downwards trajectory in the vertical direction
-		trajectory.y += GRAVITY * delta * TARGET_FPS;
+		trajectory.y += (this.State.IsAirDashing) ? 0 : GRAVITY * delta * TARGET_FPS;
 
 		if (this.State.CanJump) 
 		{
@@ -193,6 +206,21 @@ public class Player : KinematicBody2D
 			if (PlayerInput.IsJumpButtonJustReleased() && trajectory.y < -JUMP_FORCE/2) 
 			{
 				trajectory.y = -JUMP_FORCE/2;
+			}
+		}
+
+		if (this.State.CanAirDash)
+		{
+			if (PlayerInput.IsDashButtonPressed() && (Math.Abs(dirInfluence.x) != 0))
+			{
+				trajectory.x = dirInfluence.x * MAX_SPEED;
+				trajectory.y = dirInfluence.y * MAX_SPEED;
+
+				this.State.AirDashed();
+				this.airDashTimer.Start(AIR_DASH_TIME);
+
+				GD.Print("AirDashed!");
+				GD.Print(trajectory);
 			}
 		}
 
@@ -234,8 +262,16 @@ public class Player : KinematicBody2D
 		}
 		else
 		{
-			// Determine the sprite depending on the trajectory/motion of the player
-			animationName = (IsPlayerMovingUp(motion)) ? "Jump" : "Fall";
+			if (this.State.IsAirDashing)
+			{
+				animationName = "AirDash";
+			}
+			else
+			{
+				// Determine the sprite depending on the trajectory/motion of the player
+				animationName = (IsPlayerMovingUp(motion)) ? "Jump" : "Fall";
+			}
+			
 		}
 
 		return animationName;
@@ -293,6 +329,11 @@ public class Player : KinematicBody2D
 		// "Locks" the coyote time down so that it cannot be
 		// reactivated again until the player touches the ground.
 		this.State.CoyoteTimeFinished();
+	}
+
+	public void OnAirDashTimerTimeout()
+	{
+		this.State.AirDashFinished();
 	}
 
 }
