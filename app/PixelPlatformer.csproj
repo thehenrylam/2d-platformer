@@ -57,6 +57,7 @@
     <Compile Include="Goalpoint.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="PlayerState.cs" />
+    <Compile Include="PlayerInput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spikes.cs" />
     <Compile Include="UI.cs" />
