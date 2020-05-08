@@ -16,16 +16,19 @@ public class World : Node2D
     private HashSet<string> listCheckpointNodeNames = new HashSet<string>();
     private HashSet<string> listPlayerNodeNames = new HashSet<string>();
 
+    private UI ui = null;
+    private Position2D startPosition = null;
+
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
         ConnectAll();
 
-        UI ui = this.GetNode<UI>("UI");
-        ui.HideWinScreen();
+        this.ui = this.GetNode<UI>("UI");
+        this.startPosition = this.GetNode<Position2D>("StartPosition");
 
-        Position2D startPosition = this.GetNode<Position2D>("StartPosition");
-        this.spawnPosition = startPosition.Position;
+        this.ui.HideWinScreen();
+        this.spawnPosition = this.startPosition.Position;
 
         RemoveAllPlayers();
         SpawnPlayer(this.spawnPosition);
@@ -35,25 +38,18 @@ public class World : Node2D
     {
         if (Input.IsActionJustPressed("retry"))
         {
-            GD.Print("Retrying...");
             // If the player's input pressed retry, 
             // then remove the current player (if there is any),
             // and spawn a new playable character.
             RemoveAllPlayers();
             SpawnPlayer(this.spawnPosition);
 
-            UI ui = this.GetNode<UI>("UI");
-            ui.HideWinScreen();
+            this.ui.HideWinScreen();
         }
     }
 
     public void ConnectAll()
     {
-        HashSet<string> test = new HashSet<string>()
-        {
-            "TileMap_Spikes"
-        };
-
         foreach (Node2D node in this.GetChildren())
         {
 
@@ -186,11 +182,9 @@ public class World : Node2D
     {
         if (!this.listPlayerNodeNames.Contains(entity.Name)) { return; }
 
-        UI ui = this.GetNode<UI>("UI");
-        ui.ShowWinScreen();
+        this.ui.ShowWinScreen();
 
-        Position2D startPosition = this.GetNode<Position2D>("StartPosition");
-        this.spawnPosition = startPosition.Position;
+        this.spawnPosition = this.startPosition.Position;
     }
 
 }
