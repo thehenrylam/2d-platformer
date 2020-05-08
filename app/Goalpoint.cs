@@ -39,6 +39,9 @@ public class Goalpoint : Area2D
 
         if (playerEntity == null) { return; }
 
+        AudioStreamPlayer sfxGoalRecieved = this.GetNode<AudioStreamPlayer>("SFXGoalpointRecieved");
+        sfxGoalRecieved.Play();
+
         Activate(entity);
     }
 
