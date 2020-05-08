@@ -119,6 +119,7 @@ public class Player : KinematicBody2D
 	#region Nodes
 	private Sprite sprite = null;
 	private AnimationPlayer animationPlayer = null;
+	private Node2D soundEffects = null;
 	private List<RayCast2D> raycasts = new List<RayCast2D>();
 	private Timer coyoteTimer = null;
 	private Timer airDashTimer = null;
@@ -129,6 +130,7 @@ public class Player : KinematicBody2D
 	{
 		this.sprite = this.GetNode<Sprite>("Sprite");
 		this.animationPlayer = this.GetNode<AnimationPlayer>("AnimationPlayer");
+		this.soundEffects = this.GetNode<Node2D>("SoundEffects");
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_0"));
 		this.raycasts.Add(this.GetNode<RayCast2D>("RayCast2D_1"));
 		this.coyoteTimer = this.GetNode<Timer>("CoyoteTimer");
@@ -203,7 +205,11 @@ public class Player : KinematicBody2D
 
 		// Determine the current animation
 		string animationName = ProcessAnimation(motion);
-		if (animationName != null) { this.animationPlayer.Play(animationName); }
+		if (animationName != null) 
+		{ 
+			// this.animationPlayer.Play(animationName); 
+			this.animationPlayer.CurrentAnimation = animationName; 
+		}
 
 		bool changeSpriteDirection = (dirInfluence.x != 0) && ((!this.State.IsAirDashing) || this.IsGrounded);
 		if (changeSpriteDirection) 
@@ -262,6 +268,7 @@ public class Player : KinematicBody2D
 			// upwards direction by the JUMP_FORCE's magnitude.
 			if (PlayerInput.IsJumpButtonJustPressed()) 
 			{
+				this.soundEffects.GetNode<AudioStreamPlayer>("SFXJump").Play();
 				this.State.Jumped();
 				trajectory.y = -JUMP_FORCE;
 			}
@@ -281,6 +288,8 @@ public class Player : KinematicBody2D
 		{
 			if (PlayerInput.IsDashButtonPressed() && (Math.Abs(dirInfluence.x) != 0))
 			{
+				this.soundEffects.GetNode<AudioStreamPlayer>("SFXAirDash").Play();
+
 				float totalMomentum = (Mathf.Abs(trajectory.x) + Mathf.Abs(trajectory.y)) * (1 - AIR_DASH_DISCOUNT_FACTOR);
 				totalMomentum += AIR_DASH_SPEED_BOOST;
 				totalMomentum = Mathf.Clamp(totalMomentum, 0, 2 * AIR_DASH_SPEED_BOOST);

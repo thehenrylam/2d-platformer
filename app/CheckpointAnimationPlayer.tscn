@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/Flag.png" type="Texture" id=1]
+[ext_resource path="res://assets/SoundEffects/CheckpointReached.wav" type="AudioStream" id=2]
 
 [sub_resource type="Animation" id=1]
 resource_name = "CheckpointActive"
@@ -69,6 +70,18 @@ tracks/0/keys = {
 "update": 1,
 "values": [ 2, 3, 4, 5, 6, 7 ]
 }
+tracks/1/type = "value"
+tracks/1/path = NodePath("CheckpointAnimationPlayer/SFXCheckpointRecieved:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
 
 [node name="CheckpointAnimationPlayer" type="AnimationPlayer"]
 anims/CheckpointActive = SubResource( 1 )
@@ -81,3 +94,7 @@ position = Vector2( 0, -16 )
 texture = ExtResource( 1 )
 hframes = 8
 frame = 2
+
+[node name="SFXCheckpointRecieved" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )
+volume_db = -20.0

@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/CheckpointReached.wav-8396ecd32388ab3d2b2e258c3735ffbe.sample"
+
+[deps]
+
+source_file="res://assets/SoundEffects/CheckpointReached.wav"
+dest_files=[ "res://.import/CheckpointReached.wav-8396ecd32388ab3d2b2e258c3735ffbe.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

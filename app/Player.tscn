@@ -1,7 +1,12 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://assets/Player.png" type="Texture" id=1]
 [ext_resource path="res://Player.cs" type="Script" id=2]
+[ext_resource path="res://assets/SoundEffects/AirDash.wav" type="AudioStream" id=3]
+[ext_resource path="res://assets/SoundEffects/Jump.wav" type="AudioStream" id=4]
+[ext_resource path="res://assets/SoundEffects/Step.wav" type="AudioStream" id=5]
+[ext_resource path="res://assets/SoundEffects/Explosion.wav" type="AudioStream" id=6]
+[ext_resource path="res://assets/SoundEffects/Hurt.wav" type="AudioStream" id=7]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 3, 15 )
@@ -71,6 +76,18 @@ tracks/0/keys = {
 "update": 1,
 "values": [ 7, 8, 9, 10, 11, 12, 13 ]
 }
+tracks/1/type = "value"
+tracks/1/path = NodePath("SoundEffects/SFXExplosion:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.0999999, 0.266666, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ true, true, true ]
+}
 
 [sub_resource type="Animation" id=6]
 length = 0.0166667
@@ -136,6 +153,18 @@ tracks/0/keys = {
 "update": 1,
 "values": [ 1, 2, 3, 4 ]
 }
+tracks/1/type = "value"
+tracks/1/path = NodePath("SoundEffects/SFXStep:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ true, true, true, true ]
+}
 
 [sub_resource type="Animation" id=10]
 length = 0.0166667
@@ -179,7 +208,7 @@ texture = ExtResource( 1 )
 flip_h = true
 vframes = 3
 hframes = 7
-frame = 14
+frame = 13
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -15 )
@@ -213,6 +242,28 @@ one_shot = true
 
 [node name="AirDashTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="SoundEffects" type="Node2D" parent="."]
+
+[node name="SFXAirDash" type="AudioStreamPlayer" parent="SoundEffects"]
+stream = ExtResource( 3 )
+volume_db = -28.0
+
+[node name="SFXJump" type="AudioStreamPlayer" parent="SoundEffects"]
+stream = ExtResource( 4 )
+volume_db = -32.0
+
+[node name="SFXStep" type="AudioStreamPlayer" parent="SoundEffects"]
+stream = ExtResource( 5 )
+volume_db = -25.0
+
+[node name="SFXHurt" type="AudioStreamPlayer" parent="SoundEffects"]
+stream = ExtResource( 7 )
+volume_db = -25.0
+
+[node name="SFXExplosion" type="AudioStreamPlayer" parent="SoundEffects"]
+stream = ExtResource( 6 )
+volume_db = -25.0
 [connection signal="Damage" from="." to="." method="OnPlayerDamage"]
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="OnAnimationPlayerAnimationFinished"]
 [connection signal="timeout" from="CoyoteTimer" to="." method="OnCoyoteTimerTimeout"]
