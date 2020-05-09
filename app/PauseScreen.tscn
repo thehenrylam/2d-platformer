@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://UIButtonList.tscn" type="PackedScene" id=2]
+[ext_resource path="res://PauseScreen.cs" type="Script" id=3]
+[ext_resource path="res://UIButton.tscn" type="PackedScene" id=5]
+
+[node name="PauseScreen" type="Popup"]
+pause_mode = 2
+margin_right = 0.1
+margin_bottom = 0.1
+popup_exclusive = true
+script = ExtResource( 3 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Overlay" type="ColorRect" parent="."]
+margin_left = -1991.0
+margin_top = -1995.0
+margin_right = 2009.0
+margin_bottom = 2005.0
+color = Color( 0, 0, 0, 0.235294 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ButtonList" parent="." instance=ExtResource( 2 )]
+margin_left = -90.0
+margin_top = -35.0
+margin_right = 90.0
+margin_bottom = 35.0
+
+[node name="Resume" parent="ButtonList" instance=ExtResource( 5 )]
+Text = "Resume"
+
+[node name="MainMenu" parent="ButtonList" instance=ExtResource( 5 )]
+margin_top = 25.0
+margin_bottom = 25.0
+Text = "Main Menu"
+
+[node name="Quit" parent="ButtonList" instance=ExtResource( 5 )]
+margin_top = 50.0
+margin_bottom = 50.0
+Text = "Quit Game"
+[connection signal="about_to_show" from="." to="." method="OnPauseScreenAboutToShow"]
+[connection signal="popup_hide" from="." to="." method="OnPauseScreenPopupHide"]

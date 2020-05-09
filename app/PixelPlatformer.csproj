@@ -53,14 +53,20 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Button.cs" />
+    <Compile Include="ButtonList.cs" />
     <Compile Include="Checkpoint.cs" />
     <Compile Include="Goalpoint.cs" />
+    <Compile Include="MainScene.cs" />
+    <Compile Include="PauseScreen.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="PlayerState.cs" />
     <Compile Include="PlayerInput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spikes.cs" />
+    <Compile Include="Test.cs" />
     <Compile Include="UI.cs" />
+    <Compile Include="WinScreen.cs" />
     <Compile Include="World.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

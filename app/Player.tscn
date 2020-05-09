@@ -200,6 +200,9 @@ tracks/0/keys = {
 
 [node name="Player" type="KinematicBody2D"]
 script = ExtResource( 2 )
+__meta__ = {
+"_edit_group_": true
+}
 AIR_DASH_TIME = 0.75
 
 [node name="Sprite" type="Sprite" parent="."]
@@ -208,7 +211,6 @@ texture = ExtResource( 1 )
 flip_h = true
 vframes = 3
 hframes = 7
-frame = 13
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -15 )

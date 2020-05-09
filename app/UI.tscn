@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://assets/Fonts/GidoleFont/Gidole-Regular.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://UI.cs" type="Script" id=2]
+[ext_resource path="res://assets/Fonts/GidoleFont/Gidolinya-Regular.otf" type="DynamicFontData" id=3]
+
+[sub_resource type="DynamicFont" id=1]
+size = 32
+font_data = ExtResource( 1 )
+fallback/0 = ExtResource( 3 )
+
+[node name="UI" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="WinPanel" type="ColorRect" parent="."]
+margin_left = 245.0
+margin_top = 150.0
+margin_right = 395.0
+margin_bottom = 190.0
+color = Color( 0, 0.772549, 0.0627451, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WinText" type="Label" parent="WinPanel"]
+margin_right = 150.0
+margin_bottom = 40.0
+custom_fonts/font = SubResource( 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "You Win!"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
