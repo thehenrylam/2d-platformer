@@ -26,15 +26,29 @@ public class Button : Control
     }
 
     [Export]
-    public ButtonState State
+    public bool Enabled
     {
-        get { return this.state; }
+        get { return this.enabled; }
         set 
         {
-            if (this.state != value)
+            if (this.enabled != value)
             {
-                this.state = value;
-                SetButtonState(value);
+                this.enabled = value;
+                this.State = UpdateButtonState(this.enabled, this.locked);
+            }
+        }
+    }
+
+    [Export]
+    public bool Locked
+    {
+        get { return this.locked; }
+        set 
+        {
+            if (this.locked != value)
+            {
+                this.locked = value;
+                this.State = UpdateButtonState(this.enabled, this.locked);
             }
         }
     }
@@ -49,7 +63,7 @@ public class Button : Control
 
             if (this.State == ButtonState.ACTIVE)
             {
-                ChangeButtonColor(value);
+                this.CurColor = value;
             }
         }
     }
@@ -64,7 +78,7 @@ public class Button : Control
 
             if (this.State == ButtonState.INACTIVE)
             {
-                ChangeButtonColor(value);
+                this.CurColor = value;
             }
         }
     }
@@ -79,7 +93,7 @@ public class Button : Control
 
             if (this.State == ButtonState.LOCKEDIN)
             {
-                ChangeButtonColor(value);
+                this.CurColor = value;
             }
         }
     }
@@ -94,13 +108,48 @@ public class Button : Control
             
             if (this.State == ButtonState.LOCKEDOUT)
             {
-                ChangeButtonColor(value);
+                this.CurColor = value;
             }
+        }
+    }
+
+    private ButtonState State
+    {
+        get { return this.state; }
+        set 
+        {
+            if (this.state != value)
+            {
+                this.state = value;
+                this.CurColor = GetButtonColor(value);
+            }
+        }
+    }
+
+    private Color CurColor
+    {
+        get 
+        {
+            if (this.background == null)
+            {
+                this.background = this.GetNode<ColorRect>("Background");
+            }
+            return this.background.Color;
+        }
+        set 
+        {
+            if (this.background == null)
+            {
+                this.background = this.GetNode<ColorRect>("Background");
+            }
+            this.background.Color = value;
         }
     }
 
     private string text = "";
     private ButtonState state = ButtonState.INACTIVE;
+    private bool locked = false;
+    private bool enabled = false;
     private Color activeColor = Color.Color8(0, 255, 0);
     private Color inactiveColor = Color.Color8(255, 255, 255);
     private Color lockedInColor = Color.Color8(35, 100, 35);
@@ -116,10 +165,26 @@ public class Button : Control
         this.background = this.GetNode<ColorRect>("Background");
 
         this.label.Text = this.text;
-        SetButtonState(this.state);
+        this.background.Color = GetButtonColor(this.state);
     }
 
-    private void SetButtonState(ButtonState state)
+    private ButtonState UpdateButtonState(bool enabled, bool locked)
+    {
+        ButtonState output = ButtonState.ACTIVE;
+
+        if (enabled)
+        {
+            output = (locked) ? ButtonState.LOCKEDIN : ButtonState.ACTIVE;
+        }
+        else
+        {
+            output = (locked) ? ButtonState.LOCKEDOUT : ButtonState.INACTIVE;
+        }
+
+        return output;
+    }
+
+    private Color GetButtonColor(ButtonState state)
     {
         Color color = this.InactiveColor;
 
@@ -141,12 +206,8 @@ public class Button : Control
                 break;
         }
 
-        this.background.Color = color;
+        return color;
     }
 
-    private void ChangeButtonColor(Color color)
-    {
-        this.background.Color = color;
-    }
 
 }

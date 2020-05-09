@@ -16,6 +16,11 @@ public class ButtonList : ColorRect
         }
     }
 
+    public Button CurrentButton
+    {
+        get { return GetButtonByIndex(this.selectedIndex); }
+    }
+
     public int Count
     {
         get { return this.nodeNames.Count; }
@@ -73,20 +78,26 @@ public class ButtonList : ColorRect
 
     private bool Select(int index)
     {
-        return SetStateToButton(index, Button.ButtonState.ACTIVE);
+        return SetStateToButton(index, true);
     }
 
     private bool Deselect(int index)
     {
-        return SetStateToButton(index, Button.ButtonState.INACTIVE);
+        return SetStateToButton(index, false);
     }
     
-    private bool SetStateToButton(int index, Button.ButtonState state)
+    private Button GetButtonByIndex(int index)
+    {
+        string nodeName = this.nodeNames[index];
+        return this.GetNode<Button>(nodeName);
+    }
+
+    private bool SetStateToButton(int index, bool enabled)
     {
         if ((index < 0) || (index >= this.nodeNames.Count)) { return false; }
 
-        string nodeName = this.nodeNames[index];
-        this.GetNode<Button>(nodeName).State = state;
+        Button button = GetButtonByIndex(index);
+        button.Enabled = enabled;
 
         return true;
     }

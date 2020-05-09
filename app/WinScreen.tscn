@@ -1,9 +1,7 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=6 format=2]
 
-[ext_resource path="res://ButtonList.cs" type="Script" id=1]
 [ext_resource path="res://UIButtonList.tscn" type="PackedScene" id=2]
 [ext_resource path="res://assets/Fonts/GidoleFont/Gidole-Regular.ttf" type="DynamicFontData" id=3]
-[ext_resource path="res://Button.cs" type="Script" id=4]
 [ext_resource path="res://UIButton.tscn" type="PackedScene" id=5]
 [ext_resource path="res://WinScreen.cs" type="Script" id=6]
 
@@ -52,59 +50,31 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ButtonList" type="ColorRect" parent="." instance=ExtResource( 2 )]
+[node name="ButtonList" parent="." instance=ExtResource( 2 )]
 margin_left = -90.0
 margin_top = -47.5
 margin_right = 90.0
 margin_bottom = 47.5
-color = Color( 1, 1, 1, 0 )
-script = ExtResource( 1 )
-__meta__ = {
-"_edit_group_": true,
-"_edit_use_anchors_": false
-}
 
-[node name="Retry" type="Control" parent="ButtonList" instance=ExtResource( 5 )]
-anchor_right = 0.282
-anchor_bottom = 0.056
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
+[node name="Retry" parent="ButtonList" instance=ExtResource( 5 )]
 Text = "Retry"
 
-[node name="NextLevel" type="Control" parent="ButtonList" instance=ExtResource( 5 )]
-anchor_right = 0.282
-anchor_bottom = 0.056
+[node name="NextLevel" parent="ButtonList" instance=ExtResource( 5 )]
 margin_top = 25.0
 margin_bottom = 25.0
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 Text = "Next Level"
+Locked = true
 
-[node name="MainMenu" type="Control" parent="ButtonList" instance=ExtResource( 5 )]
-anchor_right = 0.282
-anchor_bottom = 0.056
+[node name="MainMenu" parent="ButtonList" instance=ExtResource( 5 )]
 margin_top = 50.0
 margin_bottom = 50.0
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 Text = "Main Menu"
+Locked = true
 
-[node name="Quit" type="Control" parent="ButtonList" instance=ExtResource( 5 )]
-anchor_right = 0.282
-anchor_bottom = 0.056
+[node name="Quit" parent="ButtonList" instance=ExtResource( 5 )]
 margin_top = 75.0
 margin_right = -3.8147e-06
 margin_bottom = 75.0
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 Text = "Quit Game"
 [connection signal="about_to_show" from="." to="." method="OnWinScreenAboutToShow"]
 [connection signal="popup_hide" from="." to="." method="OnWinScreenPopupHide"]

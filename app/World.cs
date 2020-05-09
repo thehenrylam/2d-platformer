@@ -5,18 +5,19 @@ using System.Text.RegularExpressions;
 
 public class World : Node2D
 {
-    [Export]
-    public PackedScene player;
-
+    [Signal]
+    public delegate void WinStateReached();
     [Signal]
     public delegate void NewPlayer();
+
+    [Export]
+    public PackedScene player;
 
     private Vector2 spawnPosition;
 
     private HashSet<string> listCheckpointNodeNames = new HashSet<string>();
     private HashSet<string> listPlayerNodeNames = new HashSet<string>();
 
-    private UI ui = null;
     private Position2D startPosition = null;
 
     // Called when the node enters the scene tree for the first time.
@@ -24,10 +25,8 @@ public class World : Node2D
     {
         ConnectAll();
 
-        this.ui = this.GetNode<UI>("UI");
         this.startPosition = this.GetNode<Position2D>("StartPosition");
 
-        this.ui.HideWinScreen();
         this.spawnPosition = this.startPosition.Position;
 
         RemoveAllPlayers();
@@ -43,12 +42,15 @@ public class World : Node2D
             // and spawn a new playable character.
             RemoveAllPlayers();
             SpawnPlayer(this.spawnPosition);
-
-            this.ui.HideWinScreen();
         }
     }
 
-    public void ConnectAll()
+    public void Reset()
+    {
+        this.GetTree().ReloadCurrentScene();
+    }
+
+    private void ConnectAll()
     {
         foreach (Node2D node in this.GetChildren())
         {
@@ -82,7 +84,7 @@ public class World : Node2D
         }
     }
 
-    public T AttemptCast<T>(Node node)
+    private T AttemptCast<T>(Node node)
     {
         T output;
         try
@@ -182,7 +184,7 @@ public class World : Node2D
     {
         if (!this.listPlayerNodeNames.Contains(entity.Name)) { return; }
 
-        this.ui.ShowWinScreen();
+        EmitSignal(nameof(WinStateReached));
 
         this.spawnPosition = this.startPosition.Position;
     }

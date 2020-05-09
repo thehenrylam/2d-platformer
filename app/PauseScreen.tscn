@@ -38,6 +38,7 @@ Text = "Resume"
 margin_top = 25.0
 margin_bottom = 25.0
 Text = "Main Menu"
+Locked = true
 
 [node name="Quit" parent="ButtonList" instance=ExtResource( 5 )]
 margin_top = 50.0

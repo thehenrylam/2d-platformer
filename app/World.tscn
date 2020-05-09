@@ -1,4 +1,4 @@
-[gd_scene load_steps=59 format=2]
+[gd_scene load_steps=58 format=2]
 
 [ext_resource path="res://Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://assets/Tileset.png" type="Texture" id=2]
@@ -7,7 +7,6 @@
 [ext_resource path="res://World.cs" type="Script" id=5]
 [ext_resource path="res://Checkpoint.tscn" type="PackedScene" id=6]
 [ext_resource path="res://Goalpoint.tscn" type="PackedScene" id=7]
-[ext_resource path="res://UI.tscn" type="PackedScene" id=8]
 
 [sub_resource type="ConvexPolygonShape2D" id=1]
 points = PoolVector2Array( 0, 0, 16, 0, 16, 16, 0, 16 )
@@ -503,5 +502,3 @@ position = Vector2( 120, 336 )
 
 [node name="Goalpoint" parent="." instance=ExtResource( 7 )]
 position = Vector2( 559, 352 )
-
-[node name="UI" parent="." instance=ExtResource( 8 )]

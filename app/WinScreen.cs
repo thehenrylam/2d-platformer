@@ -52,7 +52,8 @@ public class WinScreen : Popup
         bool select = Input.IsActionJustPressed(UI_SELECT);
         if (select)
         {
-            string nodeName = this.buttonList.NodeNames[this.buttonList.SelectedIndex];
+            Button button = this.buttonList.CurrentButton;
+            string nodeName = (button.Locked) ? "" : button.Name;
 
             switch (nodeName)
             {
@@ -69,7 +70,7 @@ public class WinScreen : Popup
                     EmitSignal(nameof(QuitGame));
                     break;
                 default:
-                    throw new IndexOutOfRangeException("Invalid selection, pause screen can only support Resume or Quit");
+                    break;
             }
         }
     }
