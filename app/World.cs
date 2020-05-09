@@ -186,6 +186,8 @@ public class World : Node2D
 
         entity.SetPhysicsProcess(false);
 
+        System.Threading.Thread.Sleep(10);
+
         EmitSignal(nameof(WinStateReached));
 
         // this.spawnPosition = this.startPosition.Position;
