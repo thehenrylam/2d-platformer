@@ -12,6 +12,8 @@ public class World : Node2D
 
     [Export]
     public PackedScene player;
+    [Export]
+    public bool RespawnOnPlayerDeath = true;
 
     private Vector2 spawnPosition;
 
@@ -54,13 +56,9 @@ public class World : Node2D
     {
         foreach (Node2D node in this.GetChildren())
         {
-
-            GD.Print(node.Name);
-
             Spikes s = AttemptCast<Spikes>(node);
             if (s != null)
             {
-                GD.Print("Spikes Spikes Spikes");
                 // Connect this node's NewPlayer signal to the spike's OnNewPlayer method
                 this.Connect("NewPlayer", s, "OnNewPlayer");
             }
@@ -140,6 +138,8 @@ public class World : Node2D
     {
         // Start a new instance of the player object.
         var playerInstance = (KinematicBody2D)this.player.Instance(); 
+        // Set up a connection to listen to a signal regarding the death of the current player
+        playerInstance.Connect("PlayerDied", this, nameof(OnPlayerDied));
         // Immediately hide the player instance.
         playerInstance.Hide();
         // Add the player instance to the tree as a child node.
@@ -187,6 +187,17 @@ public class World : Node2D
         EmitSignal(nameof(WinStateReached));
 
         this.spawnPosition = this.startPosition.Position;
+    }
+
+    public void OnPlayerDied(Player player)
+    {
+        player.QueueFree();
+
+        if (this.RespawnOnPlayerDeath)
+        {
+            RemoveAllPlayers();
+            SpawnPlayer(this.spawnPosition);
+        }
     }
 
 }
