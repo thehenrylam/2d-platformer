@@ -160,9 +160,9 @@ public class MainScene : Node2D
 
     public void OnWorldWinStateReached()
     {
+        this.IsWinScreenActive = true;
         this.IsPaused = true;
         this.IsPauseScreenActive = false;
-        this.IsWinScreenActive = true;
     }
 
     #region Win Screen Event Handlers

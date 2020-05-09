@@ -184,9 +184,11 @@ public class World : Node2D
     {
         if (!this.listPlayerNodeNames.Contains(entity.Name)) { return; }
 
+        entity.SetPhysicsProcess(false);
+
         EmitSignal(nameof(WinStateReached));
 
-        this.spawnPosition = this.startPosition.Position;
+        // this.spawnPosition = this.startPosition.Position;
     }
 
     public void OnPlayerDied(Player player)
