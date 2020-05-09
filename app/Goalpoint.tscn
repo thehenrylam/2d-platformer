@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/Flag.png" type="Texture" id=1]
 [ext_resource path="res://Goalpoint.cs" type="Script" id=2]
@@ -25,6 +25,34 @@ tracks/0/keys = {
 "values": [ 0, 1 ]
 }
 
+[sub_resource type="Animation" id=3]
+resource_name = "GoalpointReached"
+step = 0.25
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 0, 1 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("SFXGoalpointRecieved:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1, 0.4 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ true, true, true ]
+}
+
 [node name="Goalpoint" type="Area2D"]
 script = ExtResource( 2 )
 
@@ -39,8 +67,10 @@ shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/GoalpointActive = SubResource( 2 )
+anims/GoalpointReached = SubResource( 3 )
 
 [node name="SFXGoalpointRecieved" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 3 )
 volume_db = -5.0
 [connection signal="body_entered" from="." to="." method="OnGoalpointBodyEntered"]
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="OnAnimationPlayerAnimationFinished"]

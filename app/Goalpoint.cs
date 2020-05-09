@@ -1,10 +1,18 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class Goalpoint : Area2D
 {
     [Signal]
+    public delegate void PlayerTouchedGoalPoint();
+    [Signal]
     public delegate void Activated();
+
+    private const string DEFAULT_ANIMATION = "GoalpointActive";
+    private const string GOALPOINT_REACHED_ANIMATION = "GoalpointReached";
+
+    private List<Node> activationQueue = new List<Node>();
 
     private AnimationPlayer animationInstance = null;
     private string animationName = "GoalpointActive";
@@ -16,12 +24,16 @@ public class Goalpoint : Area2D
 
         this.animationInstance = this.GetNode<AnimationPlayer>("AnimationPlayer");
 
-        this.animationInstance.Play(this.animationName);
+        this.animationInstance.Play(DEFAULT_ANIMATION);
     }
 
     public void Activate(Node entity=null)
     {
-        EmitSignal("Activated", entity, this);
+        EmitSignal(nameof(PlayerTouchedGoalPoint), entity, this);
+
+        this.activationQueue.Add(entity);
+        
+        this.animationInstance.Play(GOALPOINT_REACHED_ANIMATION);
     }
 
     public void OnGoalpointBodyEntered(Node entity)
@@ -39,10 +51,18 @@ public class Goalpoint : Area2D
 
         if (playerEntity == null) { return; }
 
-        AudioStreamPlayer sfxGoalRecieved = this.GetNode<AudioStreamPlayer>("SFXGoalpointRecieved");
-        sfxGoalRecieved.Play();
-
         Activate(entity);
+    }
+
+    public void OnAnimationPlayerAnimationFinished(string animationName)
+    {
+        if (animationName == GOALPOINT_REACHED_ANIMATION)
+        {
+            foreach (Node n in this.activationQueue)
+            {
+                EmitSignal(nameof(Activated), n, this);
+            }
+        }
     }
 
 }

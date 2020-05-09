@@ -75,8 +75,8 @@ public class World : Node2D
             Goalpoint g = AttemptCast<Goalpoint>(node);
             if (g != null)
             {
-                // Connect the goalpoint's Activated signal to this node's OnGoalpointActivate method
-                g.Connect("Activated", this, nameof(OnGoalpointActivate));
+                // Connect the goalpoint's Activated signal to this node's OnGoalpointActivated method
+                g.Connect("Activated", this, nameof(OnGoalpointActivated));
             }
 
         }
@@ -180,7 +180,7 @@ public class World : Node2D
         }
     }
 
-    public void OnGoalpointActivate(Node entity, Goalpoint sender)
+    public void OnGoalpointActivated(Node entity, Goalpoint sender)
     {
         if (!this.listPlayerNodeNames.Contains(entity.Name)) { return; }
 

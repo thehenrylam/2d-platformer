@@ -501,4 +501,4 @@ position = Vector2( 224, 128 )
 position = Vector2( 120, 336 )
 
 [node name="Goalpoint" parent="." instance=ExtResource( 7 )]
-position = Vector2( 559, 352 )
+position = Vector2( 560, 352 )
