@@ -24,7 +24,9 @@ public class Test : Node2D
         
         // this.popupPause.PopupCentered();
         // this.popupWin.PopupCentered();
+        
         this.popupMainMenu.PopupCentered();
+        
 
         //GD.Print(GetViewport().Size);
     }
@@ -33,7 +35,7 @@ public class Test : Node2D
     public override void _Process(float delta)
     {
         bool escPressed = Input.IsActionJustPressed("ui_cancel");
-        if (escPressed && (!this.popupWin.Visible))
+        if (escPressed && ((!this.popupWin.Visible) && (!this.popupMainMenu.Visible)))
         {
             if (this.popupPause.Visible)
             {
@@ -50,7 +52,7 @@ public class Test : Node2D
         }
         
         bool winActivate = Input.IsActionJustPressed("dash");
-        if (winActivate && (!this.popupPause.Visible))
+        if (winActivate && ((!this.popupPause.Visible) && (!this.popupMainMenu.Visible)))
         {
             if (this.popupWin.Visible)
             {
@@ -110,5 +112,16 @@ public class Test : Node2D
         GD.Print("[Win] Quit!");
     }
 
+    public void OnMainMenuScreenStartGame()
+    {
+        // this.popupMainMenu.Hide();
+        GD.Print("[Main Menu] Start Game!");
+    }
+
+    public void OnMainMenuScreenQuitGame()
+    {
+        // this.popupMainMenu.Hide();
+        GD.Print("[Main Menu] Quit Game!");
+    }
 
 }
