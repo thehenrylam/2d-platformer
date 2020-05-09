@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://PauseScreen.tscn" type="PackedScene" id=1]
-[ext_resource path="res://World.tscn" type="PackedScene" id=2]
 [ext_resource path="res://MainScene.cs" type="Script" id=3]
 [ext_resource path="res://WinScreen.tscn" type="PackedScene" id=4]
+[ext_resource path="res://MainMenuScreen.tscn" type="PackedScene" id=5]
 
 [node name="MainScene" type="Node2D"]
 pause_mode = 2
@@ -15,9 +15,12 @@ script = ExtResource( 3 )
 
 [node name="WinScreen" parent="CanvasLayer" instance=ExtResource( 4 )]
 
-[node name="World" parent="." instance=ExtResource( 2 )]
+[node name="MainMenuScreen" parent="CanvasLayer" instance=ExtResource( 5 )]
+[connection signal="MainMenu" from="CanvasLayer/PauseScreen" to="." method="OnPauseScreenMainMenu"]
 [connection signal="QuitGame" from="CanvasLayer/PauseScreen" to="." method="OnPauseScreenQuitGame"]
 [connection signal="Resume" from="CanvasLayer/PauseScreen" to="." method="OnPauseScreenResume"]
+[connection signal="MainMenu" from="CanvasLayer/WinScreen" to="." method="OnWinScreenMainMenu"]
 [connection signal="QuitGame" from="CanvasLayer/WinScreen" to="." method="OnWinScreenQuitGame"]
 [connection signal="Retry" from="CanvasLayer/WinScreen" to="." method="OnWinScreenRetry"]
-[connection signal="WinStateReached" from="World" to="." method="OnWorldWinStateReached"]
+[connection signal="QuitGame" from="CanvasLayer/MainMenuScreen" to="." method="OnMainMenuScreenQuitGame"]
+[connection signal="StartGame" from="CanvasLayer/MainMenuScreen" to="." method="OnMainMenuScreenStartGame"]

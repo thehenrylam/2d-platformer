@@ -69,7 +69,6 @@ Locked = true
 margin_top = 50.0
 margin_bottom = 50.0
 Text = "Main Menu"
-Locked = true
 
 [node name="Quit" parent="ButtonList" instance=ExtResource( 5 )]
 margin_top = 75.0
