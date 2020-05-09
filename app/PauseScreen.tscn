@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=7 format=2]
 
+[ext_resource path="res://assets/SoundEffects/Select_0.wav" type="AudioStream" id=1]
 [ext_resource path="res://UIButtonList.tscn" type="PackedScene" id=2]
 [ext_resource path="res://PauseScreen.cs" type="Script" id=3]
+[ext_resource path="res://assets/SoundEffects/InvalidSelection.wav" type="AudioStream" id=4]
 [ext_resource path="res://UIButton.tscn" type="PackedScene" id=5]
+[ext_resource path="res://assets/SoundEffects/Select_2.wav" type="AudioStream" id=6]
 
 [node name="PauseScreen" type="Popup"]
 pause_mode = 2
@@ -43,5 +46,17 @@ Text = "Main Menu"
 margin_top = 50.0
 margin_bottom = 50.0
 Text = "Quit Game"
+
+[node name="SFXSelect" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 1 )
+volume_db = -15.0
+
+[node name="SFXDeny" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 4 )
+volume_db = -10.0
+
+[node name="SFXConfirm" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 6 )
+volume_db = -10.0
 [connection signal="about_to_show" from="." to="." method="OnPauseScreenAboutToShow"]
 [connection signal="popup_hide" from="." to="." method="OnPauseScreenPopupHide"]

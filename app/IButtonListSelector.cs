@@ -14,6 +14,10 @@ interface IButtonListSelector
 
     string EvaluateCurrentSelection();
     
+    void PlaySelectSFX();
+
+    void PlayConfirmSFX();
+
     void SelectorBegin();
 
     void SelectorEnd();

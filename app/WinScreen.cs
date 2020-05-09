@@ -51,6 +51,7 @@ public class WinScreen : Popup, IButtonListSelector
         bool select = Input.IsActionJustPressed(UI_SELECT);
         if (select)
         {
+            PlayConfirmSFX();
             string nodeName = EvaluateCurrentSelection();
 
             switch (nodeName)
@@ -77,6 +78,7 @@ public class WinScreen : Popup, IButtonListSelector
     {
         if (this.ButtonList.SelectedIndex != index) 
         {
+            PlaySelectSFX();
             this.ButtonList.SelectedIndex = index;
         }
     }
@@ -104,6 +106,21 @@ public class WinScreen : Popup, IButtonListSelector
         Button button = this.ButtonList.CurrentButton;
         string nodeName = (button.Locked) ? "" : button.Name;
         return nodeName;
+    }
+
+    public void PlaySelectSFX()
+    {
+        AudioStreamPlayer selectSfxPlayer = GetNode<AudioStreamPlayer>("SFXSelect");
+        selectSfxPlayer.Play();
+    }
+
+    public void PlayConfirmSFX()
+    {
+        bool locked = this.ButtonList.CurrentButton.Locked;
+        string sfxNode = (locked) ? "SFXDeny" : "SFXConfirm";
+
+        AudioStreamPlayer confirmSFXPlayer = GetNode<AudioStreamPlayer>(sfxNode);
+        confirmSFXPlayer.Play();
     }
 
     public void SelectorBegin()

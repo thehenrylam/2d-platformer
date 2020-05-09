@@ -1,10 +1,13 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://assets/Skybox.png" type="Texture" id=1]
+[ext_resource path="res://assets/SoundEffects/Select_0.wav" type="AudioStream" id=2]
 [ext_resource path="res://UIButtonList.tscn" type="PackedScene" id=3]
 [ext_resource path="res://assets/Fonts/GidoleFont/Gidole-Regular.ttf" type="DynamicFontData" id=4]
+[ext_resource path="res://assets/SoundEffects/InvalidSelection.wav" type="AudioStream" id=5]
 [ext_resource path="res://UIButton.tscn" type="PackedScene" id=6]
 [ext_resource path="res://MainMenuScreen.cs" type="Script" id=7]
+[ext_resource path="res://assets/SoundEffects/Select_2.wav" type="AudioStream" id=8]
 
 [sub_resource type="DynamicFont" id=1]
 size = 32
@@ -53,5 +56,17 @@ Text = "Start Game"
 margin_top = 25.0
 margin_bottom = 25.0
 Text = "Quit Game"
+
+[node name="SFXSelect" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )
+volume_db = -15.0
+
+[node name="SFXDeny" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 5 )
+volume_db = -10.0
+
+[node name="SFXConfirm" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 8 )
+volume_db = -10.0
 [connection signal="about_to_show" from="." to="." method="OnMainMenuScreenAboutToShow"]
 [connection signal="popup_hide" from="." to="." method="OnMainMenuScreenPopupHide"]

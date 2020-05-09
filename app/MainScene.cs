@@ -6,6 +6,7 @@ public class MainScene : Node2D
 {
     public List<string> List_Of_World_Paths = new List<string>()
     {
+        "Level_0.tscn",
         "World.tscn"
     };
 

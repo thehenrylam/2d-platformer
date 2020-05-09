@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading;
 
 public class MainMenuScreen : Popup, IButtonListSelector
 {
@@ -30,6 +31,7 @@ public class MainMenuScreen : Popup, IButtonListSelector
     #endregion
 
     private bool focused = false;
+    private bool spinLockFlag = false;
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
@@ -47,6 +49,7 @@ public class MainMenuScreen : Popup, IButtonListSelector
         bool select = Input.IsActionJustPressed(UI_SELECT);
         if (select)
         {
+            PlayConfirmSFX();
             string nodeName = EvaluateCurrentSelection();
 
             switch (nodeName)
@@ -67,6 +70,7 @@ public class MainMenuScreen : Popup, IButtonListSelector
     {
         if (this.ButtonList.SelectedIndex != index) 
         {
+            PlaySelectSFX();
             this.ButtonList.SelectedIndex = index;
         }
     }
@@ -96,6 +100,21 @@ public class MainMenuScreen : Popup, IButtonListSelector
         return nodeName;
     }
 
+    public void PlaySelectSFX()
+    {
+        AudioStreamPlayer selectSfxPlayer = GetNode<AudioStreamPlayer>("SFXSelect");
+        selectSfxPlayer.Play();
+    }
+
+    public void PlayConfirmSFX()
+    {
+        bool locked = this.ButtonList.CurrentButton.Locked;
+        string sfxNode = (locked) ? "SFXDeny" : "SFXConfirm";
+
+        AudioStreamPlayer confirmSFXPlayer = GetNode<AudioStreamPlayer>(sfxNode);
+        confirmSFXPlayer.Play();
+    }
+
     public void SelectorBegin()
     {
         this.ButtonList.SelectedIndex = DefaultIndex;
@@ -115,6 +134,12 @@ public class MainMenuScreen : Popup, IButtonListSelector
     public void OnMainMenuScreenPopupHide()
     {
         SelectorEnd();
+    }
+
+    public void DisableSpinLock()
+    {
+        GD.Print("DisableSpinLock");
+        this.spinLockFlag = false;
     }
 
 }
