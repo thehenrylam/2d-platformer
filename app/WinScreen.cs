@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class WinScreen : Popup
+public class WinScreen : Popup, IButtonListSelector
 {
     [Signal]
     public delegate void Retry();
@@ -13,7 +13,7 @@ public class WinScreen : Popup
     public delegate void QuitGame();
 
     [Export]
-    public int DEFAULT_SELECTION = 0;
+    public int DefaultIndex { get; set; } = 0;
 
     public bool Focused 
     { 
@@ -25,35 +25,33 @@ public class WinScreen : Popup
         }
     }
 
+    public ButtonList ButtonList { get; set; } = null;
+
+    #region Constants
     private const string UI_DOWN = "ui_down";
     private const string UI_UP = "ui_up";
     private const string UI_SELECT = "ui_select";
+    #endregion
 
     private bool focused = false;
-
-    private ButtonList buttonList = null;
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        this.buttonList = this.GetNode<ButtonList>("ButtonList");
+        this.ButtonList = this.GetNode<ButtonList>("ButtonList");
 
         this.SetProcess(this.Focused);
     }
 
     public override void _Process(float delta)
     {
-        int newIndex = GetNewSelectedIndex();
-        if (this.buttonList.SelectedIndex != newIndex) 
-        {
-            this.buttonList.SelectedIndex = newIndex;
-        }
+        int newIndex = UpdateSelectedIndex();
+        UpdateButtonListSelection(newIndex);
 
         bool select = Input.IsActionJustPressed(UI_SELECT);
         if (select)
         {
-            Button button = this.buttonList.CurrentButton;
-            string nodeName = (button.Locked) ? "" : button.Name;
+            string nodeName = EvaluateCurrentSelection();
 
             switch (nodeName)
             {
@@ -75,12 +73,20 @@ public class WinScreen : Popup
         }
     }
 
-    private int GetNewSelectedIndex()
+    public void UpdateButtonListSelection(int index)
+    {
+        if (this.ButtonList.SelectedIndex != index) 
+        {
+            this.ButtonList.SelectedIndex = index;
+        }
+    }
+
+    public int UpdateSelectedIndex()
     {
         int changeIndex = (Input.IsActionJustPressed(UI_DOWN) ? 1 : 0) - (Input.IsActionJustPressed(UI_UP) ? 1 : 0);
 
-        int totalButtons = this.buttonList.Count;
-        int index = this.buttonList.SelectedIndex;
+        int totalButtons = this.ButtonList.Count;
+        int index = this.ButtonList.SelectedIndex;
 
         if (changeIndex != 0)
         {
@@ -93,15 +99,32 @@ public class WinScreen : Popup
         return index;
     }
 
+    public string EvaluateCurrentSelection()
+    {
+        Button button = this.ButtonList.CurrentButton;
+        string nodeName = (button.Locked) ? "" : button.Name;
+        return nodeName;
+    }
+
+    public void SelectorBegin()
+    {
+        this.ButtonList.SelectedIndex = DefaultIndex;
+        this.Focused = true;
+    }
+
+    public void SelectorEnd()
+    {
+        this.Focused = false;
+    }
+
     public void OnWinScreenAboutToShow()
     {
-        this.buttonList.SelectedIndex = DEFAULT_SELECTION;
-        this.Focused = true;
+        SelectorBegin();
     }
 
     public void OnWinScreenPopupHide()
     {
-        this.Focused = false;
+        SelectorEnd();
     }
 
 }

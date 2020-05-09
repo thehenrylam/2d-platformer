@@ -57,6 +57,7 @@
     <Compile Include="ButtonList.cs" />
     <Compile Include="Checkpoint.cs" />
     <Compile Include="Goalpoint.cs" />
+    <Compile Include="IButtonListSelector.cs" />
     <Compile Include="MainScene.cs" />
     <Compile Include="PauseScreen.cs" />
     <Compile Include="Player.cs" />

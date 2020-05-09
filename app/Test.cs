@@ -11,16 +11,20 @@ public class Test : Node2D
 
     private Popup popupPause = null;
     private Popup popupWin = null;
+    private Popup popupMainMenu = null;
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
         CanvasLayer canvas = this.GetNode<CanvasLayer>("CanvasLayer");
+
         this.popupPause = canvas.GetNode<Popup>("PauseScreen");
         this.popupWin = canvas.GetNode<Popup>("WinScreen");
+        this.popupMainMenu = canvas.GetNode<Popup>("MainMenuScreen");
         
         // this.popupPause.PopupCentered();
-        this.popupWin.PopupCentered();
+        // this.popupWin.PopupCentered();
+        this.popupMainMenu.PopupCentered();
 
         //GD.Print(GetViewport().Size);
     }
